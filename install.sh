@@ -461,37 +461,13 @@ start_court_server() {
 # ── Step 6.6: 启动所有 Agent 朝堂监听客户端 ─────────────
 start_agent_listeners() {
   info "启动所有 Agent 朝堂监听客户端..."
-
-  AGENTS=(
-    zhongshuling zhongshu_sheren
-    shizhong jishizhong
-    shangshuling
-    libu hubu libu_protocol bingbu xingbu gongbu
-    jiangzuo shaofu junqi dushui sinong
-  )
-
-  # 创建日志目录
-  mkdir -p "$REPO_DIR/data/agent_listeners"
-
-  # 启动每个 Agent 的监听客户端
-  local started=0
-  for agent in "${AGENTS[@]}"; do
-    # 检查是否已在运行
-    if pgrep -f "agent_client.py $agent" > /dev/null; then
-      log "  $agent 监听已在运行，跳过"
-      continue
-    fi
-
-    # 后台启动
-    nohup python3 "$REPO_DIR/scripts/session/agent_client.py" "$agent" \
-      > "$REPO_DIR/data/agent_listeners/$agent.log" 2>&1 &
-    
-    started=$((started + 1))
-  done
-
-  sleep 2
-  log "已启动 $started 个 Agent 监听客户端"
-  log "日志目录: $REPO_DIR/data/agent_listeners/"
+  
+  # 调用独立的启动脚本
+  if [ -f "$REPO_DIR/scripts/start_all_agents.sh" ]; then
+    bash "$REPO_DIR/scripts/start_all_agents.sh"
+  else
+    warn "未找到 scripts/start_all_agents.sh，跳过 Agent 监听启动"
+  fi
 }
 
 # ── Step 7: 创建 .gitignore ──────────────────────────────
@@ -574,6 +550,7 @@ echo "  2. Agent 收到 to:自己 的消息后自动接旨并调用 OpenClaw"
 echo "  3. 查看 Agent 日志: tail -f data/agent_listeners/zhongshuling.log"
 echo ""
 echo "管理命令："
+echo "  启动所有 Agent:    bash scripts/start_all_agents.sh"
 echo "  查看所有监听进程:  pgrep -af agent_client.py"
 echo "  停止所有监听:      pkill -f agent_client.py"
 echo "  重启单个 Agent:    pkill -f 'agent_client.py zhongshuling' && \\"
