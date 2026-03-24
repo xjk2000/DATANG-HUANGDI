@@ -34,17 +34,17 @@ echo -e "${GREEN}║  🏛️  启动所有 Agent 朝堂监听          ║${NC}
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
 echo ""
 
+# 先停止所有旧的 Agent 监听进程（确保干净的初始化）
+if pgrep -f "agent_client.py" > /dev/null 2>&1; then
+  echo -e "${YELLOW}检测到旧的 Agent 监听进程，正在停止...${NC}"
+  pkill -f "agent_client.py" || true
+  sleep 2
+  echo ""
+fi
+
 started=0
-skipped=0
 
 for agent in "${AGENTS[@]}"; do
-  # 检查是否已在运行
-  if pgrep -f "agent_client.py $agent" > /dev/null 2>&1; then
-    echo -e "  ${YELLOW}⊙${NC} $agent (已在运行)"
-    skipped=$((skipped + 1))
-    continue
-  fi
-
   # 创建或更新启动标记文件
   echo "started at $(date '+%Y-%m-%d %H:%M:%S')" > "$LOG_DIR/$agent.start"
 
@@ -58,8 +58,7 @@ done
 
 echo ""
 echo -e "${GREEN}完成！${NC}"
-echo "  启动: $started 个"
-echo "  跳过: $skipped 个"
+echo "  已启动: $started 个 Agent 监听客户端"
 echo ""
 echo "查看日志："
 echo "  tail -f $LOG_DIR/zhongshuling.log"

@@ -402,10 +402,11 @@ restart_gateway() {
 start_dashboard() {
   info "启动 Dashboard 服务器..."
 
-  # 检查是否已在运行
+  # 先停止旧的 Dashboard 进程（确保使用最新版本）
   if pgrep -f "python3.*dashboard/server.py" > /dev/null; then
-    warn "Dashboard 已在运行，跳过启动"
-    return
+    warn "检测到旧的 Dashboard，正在停止..."
+    pkill -f "python3.*dashboard/server.py" || true
+    sleep 2
   fi
 
   # 后台启动
@@ -427,10 +428,11 @@ start_dashboard() {
 start_court_server() {
   info "启动朝堂 WebSocket 服务器..."
 
-  # 检查是否已在运行
+  # 先停止旧的服务器进程（确保使用最新版本）
   if pgrep -f "python3.*session/server.py" > /dev/null; then
-    warn "朝堂服务器已在运行，跳过启动"
-    return
+    warn "检测到旧的朝堂服务器，正在停止..."
+    pkill -f "python3.*session/server.py" || true
+    sleep 2
   fi
 
   # 检查 websockets 模块
