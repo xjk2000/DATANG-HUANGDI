@@ -97,7 +97,10 @@ def json_response(handler, data, status=200):
     handler.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     handler.send_header('Access-Control-Allow-Headers', 'Content-Type')
     handler.end_headers()
-    handler.wfile.write(body)
+    try:
+        handler.wfile.write(body)
+    except BrokenPipeError:
+        pass
 
 
 def error_response(handler, message, status=400):
@@ -112,6 +115,13 @@ class DiWangHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         # 静态文件根目录指向 dashboard/
         super().__init__(*args, directory=DASHBOARD_DIR, **kwargs)
+
+    def handle(self):
+        """覆盖 handle 以静默处理 BrokenPipeError"""
+        try:
+            super().handle()
+        except BrokenPipeError:
+            pass
 
     def log_message(self, format, *args):
         """自定义日志格式"""
