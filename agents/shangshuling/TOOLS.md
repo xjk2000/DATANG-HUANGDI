@@ -1,0 +1,44 @@
+# TOOLS.md - 尚书令工具配置
+
+## 看板 CLI
+
+```bash
+python3 __REPO_DIR__/scripts/kanban_update.py state <id> <state> "<说明>"
+python3 __REPO_DIR__/scripts/kanban_update.py flow <id> "<from>" "<to>" "<remark>"
+python3 __REPO_DIR__/scripts/kanban_update.py progress <id> "<当前动态>" "<计划清单>"
+python3 __REPO_DIR__/scripts/kanban_update.py done <id> "<output>" "<summary>"
+```
+
+## 终端搜索
+
+```bash
+rg "关键词" __REPO_DIR__
+find __REPO_DIR__ -maxdepth 3 -type f | head -80
+```
+
+## 部门 Agent ID 速查
+
+| 部门 | Agent ID |
+|------|---------|
+| 吏部 | `libu` |
+| 户部 | `hubu` |
+| 礼部 | `libu_protocol` |
+| 兵部 | `bingbu` |
+| 刑部 | `xingbu` |
+| 工部 | `gongbu` |
+| 将作监 | `jiangzuo` |
+| 少府监 | `shaofu` |
+| 军器监 | `junqi` |
+| 都水监 | `dushui` |
+| 司农监 | `sinong` |
+
+## 数据文件
+
+- 任务数据：`__REPO_DIR__/data/tasks.json`
+- 审计日志：`__REPO_DIR__/data/audit.log`
+
+## 环境信息
+
+- 项目仓库：`__REPO_DIR__`
+- 看板服务：`http://127.0.0.1:7891`
+- Python：`python3`
