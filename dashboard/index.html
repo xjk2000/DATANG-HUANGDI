@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚔️ 帝王系统 · 翰林院看板</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface2: #222240;
+  --border: #2a2a4a;
+  --text: #e0e0f0;
+  --text2: #8888aa;
+  --accent: #c9a85c;
+  --accent2: #f0d78c;
+  --red: #e74c3c;
+  --green: #2ecc71;
+  --yellow: #f1c40f;
+  --blue: #3498db;
+  --purple: #9b59b6;
+  --orange: #e67e22;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+/* ─── Header ─── */
+.header {
+  background: linear-gradient(135deg, #1a0a2e 0%, #2a1040 50%, #1a0a2e 100%);
+  border-bottom: 2px solid var(--accent);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header h1 {
+  font-size: 22px;
+  color: var(--accent2);
+  letter-spacing: 2px;
+}
+.header h1 span { font-size: 16px; color: var(--text2); margin-left: 12px; font-weight: normal; }
+.header-stats {
+  display: flex;
+  gap: 16px;
+}
+.stat-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-badge .num { color: var(--accent2); font-weight: bold; font-size: 16px; }
+/* ─── Navigation ─── */
+.nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+.nav-tab {
+  padding: 12px 20px;
+  font-size: 14px;
+  color: var(--text2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-family: inherit;
+}
+.nav-tab:hover { color: var(--text); background: var(--surface2); }
+.nav-tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+/* ─── Main ─── */
+.main { padding: 20px 24px; }
+/* ─── Kanban Board ─── */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  min-height: 400px;
+}
+.kanban-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.kanban-col-header {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.kanban-col-header .count {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
+.card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.card-id { font-size: 11px; color: var(--text2); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+.card-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
+.card-meta { font-size: 12px; color: var(--text2); display: flex; gap: 8px; flex-wrap: wrap; }
+.card-meta .tag {
+  background: rgba(201,168,92,0.15);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.heartbeat { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.heartbeat.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.heartbeat.idle { background: var(--yellow); }
+.heartbeat.stale { background: var(--red); animation: pulse 1.5s infinite; }
+.heartbeat.none, .heartbeat.unknown { background: var(--text2); opacity: 0.3; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+/* ─── Agent Panel ─── */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.15s;
+}
+.agent-card:hover { border-color: var(--accent); }
+.agent-card .emoji { font-size: 28px; margin-bottom: 8px; }
+.agent-card .name { font-size: 15px; font-weight: bold; color: var(--accent2); }
+.agent-card .role { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.agent-card .group-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+.group-中书省 { background: rgba(52,152,219,0.2); color: var(--blue); }
+.group-门下省 { background: rgba(231,76,60,0.2); color: var(--red); }
+.group-尚书省 { background: rgba(155,89,182,0.2); color: var(--purple); }
+.group-六部 { background: rgba(46,204,113,0.2); color: var(--green); }
+.group-五监 { background: rgba(230,126,34,0.2); color: var(--orange); }
+.agent-status { margin-top: 8px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
+/* ─── Detail Modal ─── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+.modal h2 { color: var(--accent2); margin-bottom: 16px; font-size: 18px; }
+.modal .close-btn {
+  float: right;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.modal .close-btn:hover { border-color: var(--red); color: var(--red); }
+.detail-row { margin-bottom: 12px; }
+.detail-label { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
+.detail-value { font-size: 14px; }
+/* ─── Flow Timeline ─── */
+.flow-timeline { margin-top: 16px; }
+.flow-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-left: 2px solid var(--border);
+  padding-left: 16px;
+  margin-left: 6px;
+  position: relative;
+}
+.flow-item::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.flow-time { font-size: 11px; color: var(--text2); white-space: nowrap; min-width: 80px; }
+.flow-route { font-size: 13px; color: var(--blue); }
+.flow-remark { font-size: 13px; margin-top: 2px; }
+/* ─── Audit Log ─── */
+.audit-log {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  max-height: 600px;
+  overflow-y: auto;
+  line-height: 1.8;
+}
+.audit-line { color: var(--text2); }
+.audit-line .ts { color: var(--blue); }
+.audit-line .action { color: var(--accent); font-weight: bold; }
+/* ─── Summary Cards ─── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.summary-card .num { font-size: 32px; font-weight: bold; color: var(--accent2); }
+.summary-card .label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .header { flex-direction: column; gap: 12px; }
+  .kanban { grid-template-columns: 1fr; }
+  .nav { padding: 0 12px; }
+  .main { padding: 12px; }
+}
+.hidden { display: none !important; }
+/* ─── Section Title ─── */
+.section-title {
+  font-size: 16px;
+  color: var(--accent2);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>⚔️ 帝王系统 · 翰林院<span>中书取旨 · 门下封驳 · 尚书奉行</span></h1>
+  <div class="header-stats" id="headerStats">
+    <div class="stat-badge">📜 敕令 <span class="num" id="totalTasks">0</span></div>
+    <div class="stat-badge">⚡ 执行中 <span class="num" id="activeTasks">0</span></div>
+    <div class="stat-badge">✅ 已完成 <span class="num" id="doneTasks">0</span></div>
+    <div class="stat-badge">🏛️ 官员 <span class="num">17</span></div>
+  </div>
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button class="nav-tab active" data-tab="kanban">📋 敕令看板</button>
+  <button class="nav-tab" data-tab="monitor">🔭 省部调度</button>
+  <button class="nav-tab" data-tab="officials">👥 官员总览</button>
+  <button class="nav-tab" data-tab="memorials">📜 奏折阁</button>
+  <button class="nav-tab" data-tab="audit">📖 审计日志</button>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- 敕令看板 -->
+  <div class="tab-panel active" id="panel-kanban">
+    <div class="kanban" id="kanbanBoard"></div>
+  </div>
+
+  <!-- 省部调度 -->
+  <div class="tab-panel" id="panel-monitor">
+    <div class="summary-grid" id="summaryGrid"></div>
+    <h3 class="section-title">🏛️ 省部状态</h3>
+    <div class="agents-grid" id="monitorGrid"></div>
+  </div>
+
+  <!-- 官员总览 -->
+  <div class="tab-panel" id="panel-officials">
+    <h3 class="section-title">👥 十七官员</h3>
+    <div class="agents-grid" id="officialsGrid"></div>
+  </div>
+
+  <!-- 奏折阁 -->
+  <div class="tab-panel" id="panel-memorials">
+    <h3 class="section-title">📜 已完成敕令 · 奏折</h3>
+    <div id="memorialsList"></div>
+  </div>
+
+  <!-- 审计日志 -->
+  <div class="tab-panel" id="panel-audit">
+    <h3 class="section-title">📖 审计日志</h3>
+    <div class="audit-log" id="auditLog">加载中...</div>
+  </div>
+
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const API = '';
+const KANBAN_COLUMNS = [
+  { state: 'Imperial',       label: '👑 皇帝下旨',  color: '#c9a85c' },
+  { state: 'ZhongshuDraft',  label: '📜 中书起草',  color: '#3498db' },
+  { state: 'MenxiaReview',   label: '🔍 门下审议',  color: '#e67e22' },
+  { state: 'Approved',       label: '✅ 准奏通过',  color: '#2ecc71' },
+  { state: 'Dispatching',    label: '📮 尚书派发',  color: '#9b59b6' },
+  { state: 'Executing',      label: '⚔️ 执行中',   color: '#3498db' },
+  { state: 'Review',         label: '🔎 待审查',    color: '#f1c40f' },
+  { state: 'Done',           label: '🏆 已完成',    color: '#2ecc71' },
+  { state: 'Rejected',       label: '🚫 封驳',      color: '#e74c3c' },
+  { state: 'Cancelled',      label: '❌ 已取消',    color: '#95a5a6' },
+  { state: 'Blocked',        label: '🔴 阻塞',      color: '#e74c3c' },
+];
+
+let allTasks = [];
+let agentsStatus = {};
+
+// ─── Tab 切换 ───
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'audit') loadAuditLog();
+    if (tab.dataset.tab === 'memorials') renderMemorials();
+  });
+});
+
+// ─── 数据加载 ───
+async function fetchJSON(url) {
+  try {
+    const r = await fetch(API + url);
+    return await r.json();
+  } catch(e) { console.error('fetch error:', url, e); return null; }
+}
+
+async function refreshAll() {
+  const [tasks, agents, summary] = await Promise.all([
+    fetchJSON('/api/tasks'),
+    fetchJSON('/api/agents-status'),
+    fetchJSON('/api/summary'),
+  ]);
+  if (tasks) { allTasks = tasks; renderKanban(); updateHeaderStats(); }
+  if (agents) { agentsStatus = agents; renderMonitor(); renderOfficials(); }
+  if (summary) renderSummary(summary);
+}
+
+function updateHeaderStats() {
+  document.getElementById('totalTasks').textContent = allTasks.length;
+  document.getElementById('activeTasks').textContent = allTasks.filter(t => ['Executing','Dispatching','MenxiaReview','ZhongshuDraft'].includes(t.state)).length;
+  document.getElementById('doneTasks').textContent = allTasks.filter(t => t.state === 'Done').length;
+}
+
+// ─── 看板渲染 ───
+function renderKanban() {
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = '';
+  for (const col of KANBAN_COLUMNS) {
+    const tasks = allTasks.filter(t => t.state === col.state);
+    if (tasks.length === 0 && ['Rejected','Cancelled','Blocked'].includes(col.state)) continue;
+
+    const colEl = document.createElement('div');
+    colEl.className = 'kanban-col';
+    colEl.innerHTML = `
+      <div class="kanban-col-header" style="border-left:3px solid ${col.color}">
+        ${col.label} <span class="count">${tasks.length}</span>
+      </div>
+      <div class="kanban-cards">
+        ${tasks.map(t => `
+          <div class="card" onclick="showTaskDetail('${t.id}')">
+            <div class="card-id">
+              ${t.id}
+              <span class="heartbeat ${t.heartbeat || 'none'}"></span>
+            </div>
+            <div class="card-title">${escHtml(t.title || '')}</div>
+            <div class="card-meta">
+              <span class="tag">${escHtml(t.org || '')}</span>
+              <span>${escHtml(t.official || '')}</span>
+            </div>
+            ${t.progress ? `<div style="font-size:12px;color:var(--text2);margin-top:6px">💭 ${escHtml(t.progress)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    `;
+    board.appendChild(colEl);
+  }
+}
+
+// ─── 省部调度 ───
+function renderSummary(summary) {
+  const grid = document.getElementById('summaryGrid');
+  const sc = summary.stateCounts || {};
+  const items = [
+    { label: '总敕令', num: summary.total || 0, color: 'var(--accent2)' },
+    { label: '执行中', num: (sc.Executing||0) + (sc.Dispatching||0), color: 'var(--blue)' },
+    { label: '审议中', num: (sc.MenxiaReview||0), color: 'var(--orange)' },
+    { label: '已完成', num: sc.Done||0, color: 'var(--green)' },
+    { label: '封驳', num: sc.Rejected||0, color: 'var(--red)' },
+    { label: '停滞', num: (summary.staleTasks||[]).length, color: 'var(--red)' },
+  ];
+  grid.innerHTML = items.map(i => `
+    <div class="summary-card">
+      <div class="num" style="color:${i.color}">${i.num}</div>
+      <div class="label">${i.label}</div>
+    </div>
+  `).join('');
+}
+
+function renderMonitor() {
+  const grid = document.getElementById('monitorGrid');
+  const groups = {};
+  for (const [id, agent] of Object.entries(agentsStatus)) {
+    const g = agent.group || '未知';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(agent);
+  }
+  let html = '';
+  for (const [group, agents] of Object.entries(groups)) {
+    for (const a of agents) {
+      const statusIcon = a.status === 'alive' ? '🟢' : a.status === 'idle' ? '🟡' : a.status === 'inactive' ? '🔴' : '⚪';
+      html += `
+        <div class="agent-card">
+          <div class="emoji">${a.emoji || '🤖'}</div>
+          <div class="name">${escHtml(a.name || a.id)}</div>
+          <div class="role">${escHtml(a.role || '')}</div>
+          <span class="group-badge group-${group}">${group}</span>
+          <div class="agent-status">${statusIcon} ${a.status || '未知'} · ${a.sessions || 0} 会话</div>
+        </div>
+      `;
+    }
+  }
+  grid.innerHTML = html;
+}
+
+// ─── 官员总览 ───
+function renderOfficials() {
+  const grid = document.getElementById('officialsGrid');
+  let html = '';
+  for (const [id, a] of Object.entries(agentsStatus)) {
+    html += `
+      <div class="agent-card">
+        <div class="emoji">${a.emoji || '🤖'}</div>
+        <div class="name">${escHtml(a.name || id)}</div>
+        <div class="role">${escHtml(a.role || '')}</div>
+        <span class="group-badge group-${a.group || ''}">${a.group || '未知'}</span>
+        <div class="agent-status">
+          <span class="heartbeat ${a.status === 'alive' ? 'active' : a.status === 'idle' ? 'idle' : 'unknown'}"></span>
+          ${a.status || '未知'} · ${a.sessions || 0} 会话
+        </div>
+        ${a.lastActivity ? `<div style="font-size:11px;color:var(--text2);margin-top:4px">最后活跃: ${formatTime(a.lastActivity)}</div>` : ''}
+      </div>
+    `;
+  }
+  grid.innerHTML = html;
+}
+
+// ─── 奏折阁 ───
+function renderMemorials() {
+  const list = document.getElementById('memorialsList');
+  const done = allTasks.filter(t => t.state === 'Done');
+  if (done.length === 0) {
+    list.innerHTML = '<div style="color:var(--text2);text-align:center;padding:40px">暂无已完成的敕令</div>';
+    return;
+  }
+  list.innerHTML = done.map(t => `
+    <div class="card" style="margin-bottom:12px" onclick="showTaskDetail('${t.id}')">
+      <div class="card-id">${t.id} <span style="color:var(--green)">✅ 已完成</span></div>
+      <div class="card-title">${escHtml(t.title || '')}</div>
+      <div class="card-meta">
+        <span class="tag">${escHtml(t.org || '')}</span>
+        <span>${escHtml(t.official || '')}</span>
+      </div>
+      ${t.output ? `<div style="font-size:13px;margin-top:8px;color:var(--text2)">📋 ${escHtml(t.output).substring(0,200)}</div>` : ''}
+      <div class="flow-timeline" style="margin-top:12px">
+        ${(t.flow_log || []).map(f => `
+          <div class="flow-item">
+            <div class="flow-time">${formatTime(f.at)}</div>
+            <div>
+              <div class="flow-route">${escHtml(f.from)} → ${escHtml(f.to)}</div>
+              <div class="flow-remark">${escHtml(f.remark)}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── 审计日志 ───
+async function loadAuditLog() {
+  const data = await fetchJSON('/api/audit-log?limit=200');
+  const el = document.getElementById('auditLog');
+  if (!data || !data.lines || data.lines.length === 0) {
+    el.innerHTML = '<span style="color:var(--text2)">暂无审计日志</span>';
+    return;
+  }
+  el.innerHTML = data.lines.map(line => {
+    const m = line.match(/^\[(.+?)\]\s+(\w+)\s+(.*)/);
+    if (m) {
+      return `<div class="audit-line"><span class="ts">[${escHtml(m[1])}]</span> <span class="action">${escHtml(m[2])}</span> ${escHtml(m[3])}</div>`;
+    }
+    return `<div class="audit-line">${escHtml(line)}</div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── 敕令详情弹窗 ───
+async function showTaskDetail(taskId) {
+  const task = await fetchJSON('/api/task?id=' + encodeURIComponent(taskId));
+  if (!task || task.error) return;
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <button class="close-btn" onclick="closeModal()">✕ 关闭</button>
+    <h2>${task.stateLabel || task.state} · ${escHtml(task.title || '')}</h2>
+    <div class="detail-row"><div class="detail-label">敕令编号</div><div class="detail-value">${task.id}</div></div>
+    <div class="detail-row"><div class="detail-label">所属部门</div><div class="detail-value">${escHtml(task.org || '')} · ${escHtml(task.official || '')}</div></div>
+    <div class="detail-row"><div class="detail-label">当前状态</div><div class="detail-value">${task.stateLabel || task.state}</div></div>
+    ${task.progress ? `<div class="detail-row"><div class="detail-label">实时进展</div><div class="detail-value">💭 ${escHtml(task.progress)}</div></div>` : ''}
+    ${task.plan ? `<div class="detail-row"><div class="detail-label">计划进度</div><div class="detail-value">${escHtml(task.plan)}</div></div>` : ''}
+    ${task.now ? `<div class="detail-row"><div class="detail-label">当前动态</div><div class="detail-value">${escHtml(task.now)}</div></div>` : ''}
+    ${task.output ? `<div class="detail-row"><div class="detail-label">产出物</div><div class="detail-value" style="white-space:pre-wrap">${escHtml(task.output)}</div></div>` : ''}
+    ${task.block && task.block !== '无' ? `<div class="detail-row"><div class="detail-label">阻塞项</div><div class="detail-value" style="color:var(--red)">${escHtml(task.block)}</div></div>` : ''}
+    ${(task.todos && task.todos.length) ? `
+      <div class="detail-row">
+        <div class="detail-label">子任务</div>
+        <div class="detail-value">
+          ${task.todos.map(td => `
+            <div style="padding:4px 0;border-bottom:1px solid var(--border)">
+              ${td.status === 'completed' ? '✅' : td.status === 'doing' ? '🔄' : td.status === 'blocked' ? '🔴' : '⬜'}
+              ${escHtml(td.title)}
+              ${td.detail ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${escHtml(td.detail)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+    <h3 style="color:var(--accent2);margin-top:20px;margin-bottom:12px">📜 流转记录</h3>
+    <div class="flow-timeline">
+      ${(task.flow_log || []).map(f => `
+        <div class="flow-item">
+          <div class="flow-time">${formatTime(f.at)}</div>
+          <div>
+            <div class="flow-route">${escHtml(f.from)} → ${escHtml(f.to)}</div>
+            <div class="flow-remark">${escHtml(f.remark)}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ─── 工具函数 ───
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function formatTime(iso) {
+  if (!iso) return '-';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  } catch { return iso; }
+}
+
+// ─── ESC 关闭弹窗 ───
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─── 启动 ───
+refreshAll();
+setInterval(refreshAll, 10000);
+</script>
+</body>
+</html>

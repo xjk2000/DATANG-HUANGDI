@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build: .
+    container_name: diwang-dashboard
+    ports:
+      - "7891:7891"
+    volumes:
+      - ./data:/app/data
+      - ./scripts:/app/scripts
+      - ./agents:/app/agents
+    environment:
+      - REPO_DIR=/app
+      - PORT=7891
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7891/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
