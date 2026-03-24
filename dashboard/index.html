@@ -3,626 +3,455 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚔️ 帝王系统 · 翰林院看板</title>
+<title>大唐皇帝 · 翰林院</title>
 <style>
-:root {
-  --bg: #0f0f1a;
-  --surface: #1a1a2e;
-  --surface2: #222240;
-  --border: #2a2a4a;
-  --text: #e0e0f0;
-  --text2: #8888aa;
-  --accent: #c9a85c;
-  --accent2: #f0d78c;
-  --red: #e74c3c;
-  --green: #2ecc71;
-  --yellow: #f1c40f;
-  --blue: #3498db;
-  --purple: #9b59b6;
-  --orange: #e67e22;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#09090b;--bg2:#111113;--surface:#18181b;--surface2:#1f1f23;--surface3:#27272a;
+  --border:#2e2e33;--border2:#3f3f46;
+  --text:#fafafa;--text2:#a1a1aa;--text3:#71717a;
+  --gold:#d4a745;--gold2:#f5d280;--gold-bg:rgba(212,167,69,.08);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,.1);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,.1);
+  --orange:#f59e0b;--orange-bg:rgba(245,158,11,.1);
+  --purple:#a855f7;--purple-bg:rgba(168,85,247,.1);
+  --cyan:#06b6d4;--cyan-bg:rgba(6,182,212,.1);
+  --sidebar-w:240px;
+  --radius:12px;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-}
-/* ─── Header ─── */
-.header {
-  background: linear-gradient(135deg, #1a0a2e 0%, #2a1040 50%, #1a0a2e 100%);
-  border-bottom: 2px solid var(--accent);
-  padding: 16px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.header h1 {
-  font-size: 22px;
-  color: var(--accent2);
-  letter-spacing: 2px;
-}
-.header h1 span { font-size: 16px; color: var(--text2); margin-left: 12px; font-weight: normal; }
-.header-stats {
-  display: flex;
-  gap: 16px;
-}
-.stat-badge {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.stat-badge .num { color: var(--accent2); font-weight: bold; font-size: 16px; }
-/* ─── Navigation ─── */
-.nav {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  display: flex;
-  gap: 0;
-  overflow-x: auto;
-}
-.nav-tab {
-  padding: 12px 20px;
-  font-size: 14px;
-  color: var(--text2);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-  white-space: nowrap;
-  background: none;
-  border-top: none;
-  border-left: none;
-  border-right: none;
-  font-family: inherit;
-}
-.nav-tab:hover { color: var(--text); background: var(--surface2); }
-.nav-tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
-/* ─── Main ─── */
-.main { padding: 20px 24px; }
-/* ─── Kanban Board ─── */
-.kanban {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  min-height: 400px;
-}
-.kanban-col {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.kanban-col-header {
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: bold;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.kanban-col-header .count {
-  background: var(--surface2);
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 12px;
-  color: var(--text2);
-}
-.kanban-cards { padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
-.card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.card:hover { border-color: var(--accent); transform: translateY(-1px); }
-.card-id { font-size: 11px; color: var(--text2); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
-.card-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; line-height: 1.4; }
-.card-meta { font-size: 12px; color: var(--text2); display: flex; gap: 8px; flex-wrap: wrap; }
-.card-meta .tag {
-  background: rgba(201,168,92,0.15);
-  color: var(--accent);
-  border-radius: 4px;
-  padding: 1px 6px;
-}
-.heartbeat { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.heartbeat.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
-.heartbeat.idle { background: var(--yellow); }
-.heartbeat.stale { background: var(--red); animation: pulse 1.5s infinite; }
-.heartbeat.none, .heartbeat.unknown { background: var(--text2); opacity: 0.3; }
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-/* ─── Agent Panel ─── */
-.agents-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-}
-.agent-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  transition: all 0.15s;
-}
-.agent-card:hover { border-color: var(--accent); }
-.agent-card .emoji { font-size: 28px; margin-bottom: 8px; }
-.agent-card .name { font-size: 15px; font-weight: bold; color: var(--accent2); }
-.agent-card .role { font-size: 12px; color: var(--text2); margin-top: 2px; }
-.agent-card .group-badge {
-  display: inline-block;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-top: 8px;
-}
-.group-中书省 { background: rgba(52,152,219,0.2); color: var(--blue); }
-.group-门下省 { background: rgba(231,76,60,0.2); color: var(--red); }
-.group-尚书省 { background: rgba(155,89,182,0.2); color: var(--purple); }
-.group-六部 { background: rgba(46,204,113,0.2); color: var(--green); }
-.group-五监 { background: rgba(230,126,34,0.2); color: var(--orange); }
-.agent-status { margin-top: 8px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
-/* ─── Detail Modal ─── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  z-index: 100;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 60px;
-}
-.modal-overlay.show { display: flex; }
-.modal {
-  background: var(--surface);
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 700px;
-  max-height: 80vh;
-  overflow-y: auto;
-  padding: 24px;
-}
-.modal h2 { color: var(--accent2); margin-bottom: 16px; font-size: 18px; }
-.modal .close-btn {
-  float: right;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text2);
-  padding: 4px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-.modal .close-btn:hover { border-color: var(--red); color: var(--red); }
-.detail-row { margin-bottom: 12px; }
-.detail-label { font-size: 12px; color: var(--text2); margin-bottom: 2px; }
-.detail-value { font-size: 14px; }
-/* ─── Flow Timeline ─── */
-.flow-timeline { margin-top: 16px; }
-.flow-item {
-  display: flex;
-  gap: 12px;
-  padding: 8px 0;
-  border-left: 2px solid var(--border);
-  padding-left: 16px;
-  margin-left: 6px;
-  position: relative;
-}
-.flow-item::before {
-  content: '';
-  position: absolute;
-  left: -5px;
-  top: 12px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-.flow-time { font-size: 11px; color: var(--text2); white-space: nowrap; min-width: 80px; }
-.flow-route { font-size: 13px; color: var(--blue); }
-.flow-remark { font-size: 13px; margin-top: 2px; }
+body{font-family:-apple-system,'PingFang SC','Noto Sans SC','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;overflow:hidden}
+
+/* ─── Sidebar ─── */
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0}
+.sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-brand h1{font-size:18px;color:var(--gold2);letter-spacing:1px;line-height:1.4}
+.sidebar-brand p{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:.5px}
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.sidebar-item:hover{background:var(--surface);color:var(--text)}
+.sidebar-item.active{background:var(--gold-bg);color:var(--gold2)}
+.sidebar-item .icon{width:20px;text-align:center;font-size:15px}
+.sidebar-health{padding:16px;border-top:1px solid var(--border)}
+.health-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.health-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
+.health-dot.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+.sidebar-health span{font-size:12px;color:var(--text3)}
+
+/* ─── Content ─── */
+.content{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.refresh-select{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.refresh-select option{background:var(--surface)}
+.stat-pills{display:flex;gap:8px}
+.pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px}
+.pill .n{font-weight:700;color:var(--text);font-size:13px}
+
+.main-scroll{flex:1;overflow-y:auto;padding:24px 28px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ─── Stat Cards (Overview) ─── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;filter:blur(40px);opacity:.15}
+.stat-card.gold::after{background:var(--gold)}
+.stat-card.blue::after{background:var(--blue)}
+.stat-card.green::after{background:var(--green)}
+.stat-card.red::after{background:var(--red)}
+.stat-card.orange::after{background:var(--orange)}
+.stat-card.purple::after{background:var(--purple)}
+.stat-card .label{font-size:12px;color:var(--text3);margin-bottom:8px}
+.stat-card .value{font-size:28px;font-weight:700;line-height:1}
+.stat-card.gold .value{color:var(--gold2)}
+.stat-card.blue .value{color:var(--blue)}
+.stat-card.green .value{color:var(--green)}
+.stat-card.red .value{color:var(--red)}
+.stat-card.orange .value{color:var(--orange)}
+.stat-card.purple .value{color:var(--purple)}
+
+/* ─── Kanban ─── */
+.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:12px;min-height:500px}
+.kanban::-webkit-scrollbar{height:6px}
+.kanban::-webkit-scrollbar-track{background:var(--bg)}
+.kanban::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+.k-col{min-width:260px;max-width:300px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column}
+.k-col-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.k-col-head .title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.k-col-head .cnt{background:var(--surface3);border-radius:10px;padding:2px 8px;font-size:11px;color:var(--text3)}
+.k-col-head .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.k-cards{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1;overflow-y:auto;max-height:calc(100vh - 260px)}
+.k-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s}
+.k-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.k-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.k-card-id{font-size:11px;color:var(--text3);font-family:'SF Mono',monospace}
+.k-card-title{font-size:13px;font-weight:500;line-height:1.5;margin-bottom:8px}
+.k-card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.k-tag{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.k-tag.org{background:var(--gold-bg);color:var(--gold)}
+.k-tag.official{background:var(--blue-bg);color:var(--blue)}
+.k-card-progress{font-size:11px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);line-height:1.5}
+.hb{width:7px;height:7px;border-radius:50%;display:inline-block}
+.hb-active{background:var(--green);box-shadow:0 0 6px var(--green);animation:glow 2s infinite}
+.hb-idle{background:var(--orange)}
+.hb-stale{background:var(--red);animation:blink 1.2s infinite}
+.hb-none{background:var(--surface3)}
+@keyframes glow{0%,100%{box-shadow:0 0 4px var(--green)}50%{box-shadow:0 0 10px var(--green)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ─── Agent Cards ─── */
+.agents-section{margin-bottom:28px}
+.agents-section-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:12px;padding-left:4px;display:flex;align-items:center;gap:8px}
+.agents-section-title .line{flex:1;height:1px;background:var(--border)}
+.ag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.ag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:all .2s;position:relative;overflow:hidden}
+.ag-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.ag-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.ag-card.g-中书省::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.ag-card.g-门下省::before{background:linear-gradient(90deg,var(--red),var(--orange))}
+.ag-card.g-尚书省::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.ag-card.g-六部::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.ag-card.g-五监::before{background:linear-gradient(90deg,var(--orange),var(--gold))}
+.ag-top{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.ag-emoji{font-size:28px;width:44px;height:44px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.ag-info .ag-name{font-size:14px;font-weight:600;color:var(--text)}
+.ag-info .ag-role{font-size:11px;color:var(--text3);margin-top:2px}
+.ag-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border)}
+.ag-group{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500}
+.ag-group.t-中书省{background:var(--blue-bg);color:var(--blue)}
+.ag-group.t-门下省{background:var(--red-bg);color:var(--red)}
+.ag-group.t-尚书省{background:var(--purple-bg);color:var(--purple)}
+.ag-group.t-六部{background:var(--green-bg);color:var(--green)}
+.ag-group.t-五监{background:var(--orange-bg);color:var(--orange)}
+.ag-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+
+/* ─── Memorial / Archive ─── */
+.mem-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;cursor:pointer;transition:all .2s}
+.mem-card:hover{border-color:var(--green)}
+.mem-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mem-badge{background:var(--green-bg);color:var(--green);font-size:11px;padding:2px 10px;border-radius:10px;font-weight:600}
+.mem-title{font-size:14px;font-weight:500;margin-bottom:6px}
+.mem-output{font-size:12px;color:var(--text3);line-height:1.6;margin-top:8px;padding:10px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+
+/* ─── Timeline ─── */
+.timeline{margin-top:16px}
+.tl-item{display:flex;gap:14px;padding-bottom:16px;position:relative}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:1px;background:var(--border)}
+.tl-dot{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;z-index:1}
+.tl-body{flex:1}
+.tl-route{font-size:12px;color:var(--blue);font-weight:500}
+.tl-remark{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.5}
+.tl-time{font-size:10px;color:var(--text3);margin-top:3px}
+
 /* ─── Audit Log ─── */
-.audit-log {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-size: 12px;
-  max-height: 600px;
-  overflow-y: auto;
-  line-height: 1.8;
-}
-.audit-line { color: var(--text2); }
-.audit-line .ts { color: var(--blue); }
-.audit-line .action { color: var(--accent); font-weight: bold; }
-/* ─── Summary Cards ─── */
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.summary-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  text-align: center;
-}
-.summary-card .num { font-size: 32px; font-weight: bold; color: var(--accent2); }
-.summary-card .label { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.log-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.log-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.log-header span{font-size:13px;font-weight:600}
+.log-body{padding:14px 18px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:11.5px;max-height:calc(100vh - 240px);overflow-y:auto;line-height:2}
+.log-line{color:var(--text3)}
+.log-line .ts{color:var(--cyan)}
+.log-line .act{color:var(--gold);font-weight:600}
+
+/* ─── Modal ─── */
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;justify-content:center;align-items:flex-start;padding-top:50px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:92%;max-width:680px;max-height:82vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.modal-head h2{font-size:17px;color:var(--text);line-height:1.4;flex:1}
+.close-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text3);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;margin-left:12px}
+.close-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.d-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.d-item{background:var(--surface2);border-radius:8px;padding:12px}
+.d-item.full{grid-column:1/-1}
+.d-label{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.d-val{font-size:13px;color:var(--text)}
+.todo-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.todo-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.todo-text{font-size:13px;line-height:1.5}
+.todo-detail{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ─── Empty State ─── */
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty .icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty .msg{font-size:14px}
+
 /* ─── Responsive ─── */
-@media (max-width: 768px) {
-  .header { flex-direction: column; gap: 12px; }
-  .kanban { grid-template-columns: 1fr; }
-  .nav { padding: 0 12px; }
-  .main { padding: 12px; }
+@media(max-width:768px){
+  .sidebar{display:none}
+  .topbar{padding:12px 16px}
+  .main-scroll{padding:16px}
+  .kanban{flex-direction:column}
+  .k-col{min-width:100%;max-width:100%}
+  .d-grid{grid-template-columns:1fr}
 }
-.hidden { display: none !important; }
-/* ─── Section Title ─── */
-.section-title {
-  font-size: 16px;
-  color: var(--accent2);
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-  <h1>⚔️ 帝王系统 · 翰林院<span>中书取旨 · 门下封驳 · 尚书奉行</span></h1>
-  <div class="header-stats" id="headerStats">
-    <div class="stat-badge">📜 敕令 <span class="num" id="totalTasks">0</span></div>
-    <div class="stat-badge">⚡ 执行中 <span class="num" id="activeTasks">0</span></div>
-    <div class="stat-badge">✅ 已完成 <span class="num" id="doneTasks">0</span></div>
-    <div class="stat-badge">🏛️ 官员 <span class="num">17</span></div>
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <h1>大唐皇帝</h1>
+    <p>三省六部五监 · 翰林院</p>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="sidebar-item active" data-tab="overview"><span class="icon">📊</span>总览</button>
+    <button class="sidebar-item" data-tab="kanban"><span class="icon">📋</span>敕令看板</button>
+    <button class="sidebar-item" data-tab="agents"><span class="icon">🏛️</span>官员总览</button>
+    <button class="sidebar-item" data-tab="memorials"><span class="icon">📜</span>奏折阁</button>
+    <button class="sidebar-item" data-tab="audit"><span class="icon">📖</span>审计日志</button>
+  </nav>
+  <div class="sidebar-health">
+    <span class="health-dot ok" id="gwDot"></span>
+    <span id="gwText">系统正常</span>
+  </div>
+</aside>
+
+<!-- Content -->
+<div class="content">
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">总览</div>
+    <div class="topbar-right">
+      <div class="stat-pills">
+        <div class="pill">📜 <span class="n" id="sTotalTasks">0</span></div>
+        <div class="pill">⚡ <span class="n" id="sActiveTasks">0</span></div>
+        <div class="pill">✅ <span class="n" id="sDoneTasks">0</span></div>
+      </div>
+      <select class="refresh-select" id="refreshInterval">
+        <option value="0">手动刷新</option>
+        <option value="10" selected>10 秒</option>
+        <option value="30">30 秒</option>
+        <option value="60">1 分钟</option>
+        <option value="300">5 分钟</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main-scroll">
+    <!-- 总览 -->
+    <div class="tab-panel active" id="panel-overview">
+      <div class="stats-row" id="statsRow"></div>
+      <div class="agents-section">
+        <div class="agents-section-title">三省 · 决策层 <span class="line"></span></div>
+        <div class="ag-grid" id="agGridSansheng"></div>
+      </div>
+      <div class="agents-section">
+        <div class="agents-section-title">六部 · 管理层 <span class="line"></span></div>
+        <div class="ag-grid" id="agGridLiubu"></div>
+      </div>
+      <div class="agents-section">
+        <div class="agents-section-title">五监 · 生产层 <span class="line"></span></div>
+        <div class="ag-grid" id="agGridWujian"></div>
+      </div>
+    </div>
+
+    <!-- 敕令看板 -->
+    <div class="tab-panel" id="panel-kanban">
+      <div class="kanban" id="kanbanBoard"></div>
+    </div>
+
+    <!-- 官员总览 -->
+    <div class="tab-panel" id="panel-agents">
+      <div class="stats-row" id="agentStatsRow"></div>
+      <div class="ag-grid" id="allAgentsGrid"></div>
+    </div>
+
+    <!-- 奏折阁 -->
+    <div class="tab-panel" id="panel-memorials">
+      <div id="memorialsList"></div>
+    </div>
+
+    <!-- 审计日志 -->
+    <div class="tab-panel" id="panel-audit">
+      <div class="log-wrap">
+        <div class="log-header"><span>审计日志</span><span id="logCount" style="font-size:11px;color:var(--text3)"></span></div>
+        <div class="log-body" id="auditLog"></div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Navigation -->
-<div class="nav">
-  <button class="nav-tab active" data-tab="kanban">📋 敕令看板</button>
-  <button class="nav-tab" data-tab="monitor">🔭 省部调度</button>
-  <button class="nav-tab" data-tab="officials">👥 官员总览</button>
-  <button class="nav-tab" data-tab="memorials">📜 奏折阁</button>
-  <button class="nav-tab" data-tab="audit">📖 审计日志</button>
-</div>
-
-<!-- Main Content -->
-<div class="main">
-
-  <!-- 敕令看板 -->
-  <div class="tab-panel active" id="panel-kanban">
-    <div class="kanban" id="kanbanBoard"></div>
-  </div>
-
-  <!-- 省部调度 -->
-  <div class="tab-panel" id="panel-monitor">
-    <div class="summary-grid" id="summaryGrid"></div>
-    <h3 class="section-title">🏛️ 省部状态</h3>
-    <div class="agents-grid" id="monitorGrid"></div>
-  </div>
-
-  <!-- 官员总览 -->
-  <div class="tab-panel" id="panel-officials">
-    <h3 class="section-title">👥 十七官员</h3>
-    <div class="agents-grid" id="officialsGrid"></div>
-  </div>
-
-  <!-- 奏折阁 -->
-  <div class="tab-panel" id="panel-memorials">
-    <h3 class="section-title">📜 已完成敕令 · 奏折</h3>
-    <div id="memorialsList"></div>
-  </div>
-
-  <!-- 审计日志 -->
-  <div class="tab-panel" id="panel-audit">
-    <h3 class="section-title">📖 审计日志</h3>
-    <div class="audit-log" id="auditLog">加载中...</div>
-  </div>
-
-</div>
-
-<!-- Detail Modal -->
+<!-- Modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modalContent"></div>
 </div>
 
 <script>
-const API = '';
-const KANBAN_COLUMNS = [
-  { state: 'Imperial',       label: '👑 皇帝下旨',  color: '#c9a85c' },
-  { state: 'ZhongshuDraft',  label: '📜 中书起草',  color: '#3498db' },
-  { state: 'MenxiaReview',   label: '🔍 门下审议',  color: '#e67e22' },
-  { state: 'Approved',       label: '✅ 准奏通过',  color: '#2ecc71' },
-  { state: 'Dispatching',    label: '📮 尚书派发',  color: '#9b59b6' },
-  { state: 'Executing',      label: '⚔️ 执行中',   color: '#3498db' },
-  { state: 'Review',         label: '🔎 待审查',    color: '#f1c40f' },
-  { state: 'Done',           label: '🏆 已完成',    color: '#2ecc71' },
-  { state: 'Rejected',       label: '🚫 封驳',      color: '#e74c3c' },
-  { state: 'Cancelled',      label: '❌ 已取消',    color: '#95a5a6' },
-  { state: 'Blocked',        label: '🔴 阻塞',      color: '#e74c3c' },
+const KANBAN_COLS=[
+  {state:'Imperial',label:'皇帝下旨',color:'#d4a745',icon:'👑'},
+  {state:'ZhongshuDraft',label:'中书起草',color:'#3b82f6',icon:'📜'},
+  {state:'ZhongshuReview',label:'中书内审',color:'#6366f1',icon:'📝'},
+  {state:'MenxiaReview',label:'门下审议',color:'#f59e0b',icon:'🔍'},
+  {state:'Approved',label:'准奏通过',color:'#22c55e',icon:'✅'},
+  {state:'Dispatching',label:'尚书派发',color:'#a855f7',icon:'📮'},
+  {state:'Executing',label:'执行中',color:'#3b82f6',icon:'⚔️'},
+  {state:'Review',label:'待审查',color:'#eab308',icon:'🔎'},
+  {state:'Done',label:'已完成',color:'#22c55e',icon:'🏆'},
+  {state:'Rejected',label:'封驳',color:'#ef4444',icon:'🚫'},
+  {state:'Cancelled',label:'已取消',color:'#6b7280',icon:'❌'},
+  {state:'Blocked',label:'阻塞',color:'#ef4444',icon:'🔴'},
 ];
+const GROUPS={
+  '中书省':['zhongshuling','zhongshu_sheren'],
+  '门下省':['shizhong','jishizhong'],
+  '尚书省':['shangshuling'],
+  '六部':['libu','hubu','libu_protocol','bingbu','xingbu','gongbu'],
+  '五监':['jiangzuo','shaofu','junqi','dushui','sinong']
+};
+const TITLES={'总览':'📊 总览','kanban':'📋 敕令看板','agents':'🏛️ 官员总览','memorials':'📜 奏折阁','audit':'📖 审计日志','overview':'📊 总览'};
 
-let allTasks = [];
-let agentsStatus = {};
+let allTasks=[],agentsStatus={},refreshTimer=null;
 
-// ─── Tab 切换 ───
-document.querySelectorAll('.nav-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'audit') loadAuditLog();
-    if (tab.dataset.tab === 'memorials') renderMemorials();
+/* ─── Nav ─── */
+document.querySelectorAll('.sidebar-item').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    const tab=btn.dataset.tab;
+    document.getElementById('panel-'+tab).classList.add('active');
+    document.getElementById('pageTitle').textContent=TITLES[tab]||tab;
+    if(tab==='audit')loadAuditLog();
+    if(tab==='memorials')renderMemorials();
   });
 });
 
-// ─── 数据加载 ───
-async function fetchJSON(url) {
-  try {
-    const r = await fetch(API + url);
-    return await r.json();
-  } catch(e) { console.error('fetch error:', url, e); return null; }
+document.getElementById('refreshInterval').addEventListener('change',e=>{
+  clearInterval(refreshTimer);
+  const sec=parseInt(e.target.value);
+  if(sec>0) refreshTimer=setInterval(refreshAll,sec*1000);
+});
+
+/* ─── Fetch ─── */
+async function fetchJSON(u){try{const r=await fetch(u);return await r.json()}catch(e){console.error(u,e);return null}}
+
+async function refreshAll(){
+  const [tasks,agents,summary]=await Promise.all([fetchJSON('/api/tasks'),fetchJSON('/api/agents-status'),fetchJSON('/api/summary')]);
+  if(tasks){allTasks=tasks;renderKanban()}
+  if(agents){agentsStatus=agents;renderOverviewAgents();renderAllAgents()}
+  renderStats(summary);
+  updatePills();
+  checkHealth();
 }
 
-async function refreshAll() {
-  const [tasks, agents, summary] = await Promise.all([
-    fetchJSON('/api/tasks'),
-    fetchJSON('/api/agents-status'),
-    fetchJSON('/api/summary'),
-  ]);
-  if (tasks) { allTasks = tasks; renderKanban(); updateHeaderStats(); }
-  if (agents) { agentsStatus = agents; renderMonitor(); renderOfficials(); }
-  if (summary) renderSummary(summary);
+function updatePills(){
+  document.getElementById('sTotalTasks').textContent=allTasks.length;
+  document.getElementById('sActiveTasks').textContent=allTasks.filter(t=>['Executing','Dispatching','MenxiaReview','ZhongshuDraft'].includes(t.state)).length;
+  document.getElementById('sDoneTasks').textContent=allTasks.filter(t=>t.state==='Done').length;
 }
 
-function updateHeaderStats() {
-  document.getElementById('totalTasks').textContent = allTasks.length;
-  document.getElementById('activeTasks').textContent = allTasks.filter(t => ['Executing','Dispatching','MenxiaReview','ZhongshuDraft'].includes(t.state)).length;
-  document.getElementById('doneTasks').textContent = allTasks.filter(t => t.state === 'Done').length;
+async function checkHealth(){
+  const d=await fetchJSON('/api/health');
+  const dot=document.getElementById('gwDot');
+  const txt=document.getElementById('gwText');
+  if(d&&d.status==='ok'){dot.className='health-dot ok';txt.textContent='系统正常'}
+  else{dot.className='health-dot err';txt.textContent='连接异常'}
 }
 
-// ─── 看板渲染 ───
-function renderKanban() {
-  const board = document.getElementById('kanbanBoard');
-  board.innerHTML = '';
-  for (const col of KANBAN_COLUMNS) {
-    const tasks = allTasks.filter(t => t.state === col.state);
-    if (tasks.length === 0 && ['Rejected','Cancelled','Blocked'].includes(col.state)) continue;
-
-    const colEl = document.createElement('div');
-    colEl.className = 'kanban-col';
-    colEl.innerHTML = `
-      <div class="kanban-col-header" style="border-left:3px solid ${col.color}">
-        ${col.label} <span class="count">${tasks.length}</span>
-      </div>
-      <div class="kanban-cards">
-        ${tasks.map(t => `
-          <div class="card" onclick="showTaskDetail('${t.id}')">
-            <div class="card-id">
-              ${t.id}
-              <span class="heartbeat ${t.heartbeat || 'none'}"></span>
-            </div>
-            <div class="card-title">${escHtml(t.title || '')}</div>
-            <div class="card-meta">
-              <span class="tag">${escHtml(t.org || '')}</span>
-              <span>${escHtml(t.official || '')}</span>
-            </div>
-            ${t.progress ? `<div style="font-size:12px;color:var(--text2);margin-top:6px">💭 ${escHtml(t.progress)}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-    `;
-    board.appendChild(colEl);
-  }
-}
-
-// ─── 省部调度 ───
-function renderSummary(summary) {
-  const grid = document.getElementById('summaryGrid');
-  const sc = summary.stateCounts || {};
-  const items = [
-    { label: '总敕令', num: summary.total || 0, color: 'var(--accent2)' },
-    { label: '执行中', num: (sc.Executing||0) + (sc.Dispatching||0), color: 'var(--blue)' },
-    { label: '审议中', num: (sc.MenxiaReview||0), color: 'var(--orange)' },
-    { label: '已完成', num: sc.Done||0, color: 'var(--green)' },
-    { label: '封驳', num: sc.Rejected||0, color: 'var(--red)' },
-    { label: '停滞', num: (summary.staleTasks||[]).length, color: 'var(--red)' },
+/* ─── Stats ─── */
+function renderStats(summary){
+  const sc=summary?.stateCounts||{};
+  const items=[
+    {label:'总敕令',value:summary?.total||allTasks.length,cls:'gold'},
+    {label:'起草中',value:(sc.ZhongshuDraft||0)+(sc.ZhongshuReview||0),cls:'blue'},
+    {label:'审议中',value:sc.MenxiaReview||0,cls:'orange'},
+    {label:'执行中',value:(sc.Executing||0)+(sc.Dispatching||0),cls:'purple'},
+    {label:'已完成',value:sc.Done||0,cls:'green'},
+    {label:'封驳/阻塞',value:(sc.Rejected||0)+(sc.Blocked||0),cls:'red'},
   ];
-  grid.innerHTML = items.map(i => `
-    <div class="summary-card">
-      <div class="num" style="color:${i.color}">${i.num}</div>
-      <div class="label">${i.label}</div>
-    </div>
-  `).join('');
+  document.getElementById('statsRow').innerHTML=items.map(i=>`<div class="stat-card ${i.cls}"><div class="label">${i.label}</div><div class="value">${i.value}</div></div>`).join('');
+  // Agent page stats
+  const alive=Object.values(agentsStatus).filter(a=>a.status==='alive').length;
+  const idle=Object.values(agentsStatus).filter(a=>a.status==='idle').length;
+  const total=Object.keys(agentsStatus).length||17;
+  document.getElementById('agentStatsRow').innerHTML=[
+    {label:'总官员',value:total,cls:'gold'},
+    {label:'活跃',value:alive,cls:'green'},
+    {label:'空闲',value:idle,cls:'orange'},
+    {label:'离线',value:total-alive-idle,cls:'red'},
+  ].map(i=>`<div class="stat-card ${i.cls}"><div class="label">${i.label}</div><div class="value">${i.value}</div></div>`).join('');
 }
 
-function renderMonitor() {
-  const grid = document.getElementById('monitorGrid');
-  const groups = {};
-  for (const [id, agent] of Object.entries(agentsStatus)) {
-    const g = agent.group || '未知';
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(agent);
+/* ─── Kanban ─── */
+function renderKanban(){
+  const board=document.getElementById('kanbanBoard');
+  board.innerHTML='';
+  for(const col of KANBAN_COLS){
+    const tasks=allTasks.filter(t=>t.state===col.state);
+    if(!tasks.length&&['Rejected','Cancelled','Blocked','ZhongshuReview','Review'].includes(col.state))continue;
+    const el=document.createElement('div');el.className='k-col';
+    el.innerHTML=`<div class="k-col-head"><div class="title"><span class="dot" style="background:${col.color}"></span>${col.icon} ${col.label}</div><span class="cnt">${tasks.length}</span></div><div class="k-cards">${tasks.map(t=>`<div class="k-card" onclick="showDetail('${t.id}')"><div class="k-card-top"><span class="k-card-id">${t.id}</span><span class="hb hb-${t.heartbeat||'none'}"></span></div><div class="k-card-title">${esc(t.title||'')}</div><div class="k-card-tags"><span class="k-tag org">${esc(t.org||'')}</span><span class="k-tag official">${esc(t.official||'')}</span></div>${t.progress?`<div class="k-card-progress">${esc(t.progress)}</div>`:''}</div>`).join('')}</div>`;
+    board.appendChild(el);
   }
-  let html = '';
-  for (const [group, agents] of Object.entries(groups)) {
-    for (const a of agents) {
-      const statusIcon = a.status === 'alive' ? '🟢' : a.status === 'idle' ? '🟡' : a.status === 'inactive' ? '🔴' : '⚪';
-      html += `
-        <div class="agent-card">
-          <div class="emoji">${a.emoji || '🤖'}</div>
-          <div class="name">${escHtml(a.name || a.id)}</div>
-          <div class="role">${escHtml(a.role || '')}</div>
-          <span class="group-badge group-${group}">${group}</span>
-          <div class="agent-status">${statusIcon} ${a.status || '未知'} · ${a.sessions || 0} 会话</div>
-        </div>
-      `;
-    }
-  }
-  grid.innerHTML = html;
+  if(!board.children.length)board.innerHTML='<div class="empty"><div class="icon">📜</div><div class="msg">暂无敕令，对中书令下旨开始</div></div>';
 }
 
-// ─── 官员总览 ───
-function renderOfficials() {
-  const grid = document.getElementById('officialsGrid');
-  let html = '';
-  for (const [id, a] of Object.entries(agentsStatus)) {
-    html += `
-      <div class="agent-card">
-        <div class="emoji">${a.emoji || '🤖'}</div>
-        <div class="name">${escHtml(a.name || id)}</div>
-        <div class="role">${escHtml(a.role || '')}</div>
-        <span class="group-badge group-${a.group || ''}">${a.group || '未知'}</span>
-        <div class="agent-status">
-          <span class="heartbeat ${a.status === 'alive' ? 'active' : a.status === 'idle' ? 'idle' : 'unknown'}"></span>
-          ${a.status || '未知'} · ${a.sessions || 0} 会话
-        </div>
-        ${a.lastActivity ? `<div style="font-size:11px;color:var(--text2);margin-top:4px">最后活跃: ${formatTime(a.lastActivity)}</div>` : ''}
-      </div>
-    `;
-  }
-  grid.innerHTML = html;
+/* ─── Overview Agents ─── */
+function renderOverviewAgents(){
+  const sansheng=[...GROUPS['中书省'],...GROUPS['门下省'],...GROUPS['尚书省']];
+  document.getElementById('agGridSansheng').innerHTML=sansheng.map(id=>agentCardHTML(id)).join('');
+  document.getElementById('agGridLiubu').innerHTML=GROUPS['六部'].map(id=>agentCardHTML(id)).join('');
+  document.getElementById('agGridWujian').innerHTML=GROUPS['五监'].map(id=>agentCardHTML(id)).join('');
 }
 
-// ─── 奏折阁 ───
-function renderMemorials() {
-  const list = document.getElementById('memorialsList');
-  const done = allTasks.filter(t => t.state === 'Done');
-  if (done.length === 0) {
-    list.innerHTML = '<div style="color:var(--text2);text-align:center;padding:40px">暂无已完成的敕令</div>';
-    return;
-  }
-  list.innerHTML = done.map(t => `
-    <div class="card" style="margin-bottom:12px" onclick="showTaskDetail('${t.id}')">
-      <div class="card-id">${t.id} <span style="color:var(--green)">✅ 已完成</span></div>
-      <div class="card-title">${escHtml(t.title || '')}</div>
-      <div class="card-meta">
-        <span class="tag">${escHtml(t.org || '')}</span>
-        <span>${escHtml(t.official || '')}</span>
-      </div>
-      ${t.output ? `<div style="font-size:13px;margin-top:8px;color:var(--text2)">📋 ${escHtml(t.output).substring(0,200)}</div>` : ''}
-      <div class="flow-timeline" style="margin-top:12px">
-        ${(t.flow_log || []).map(f => `
-          <div class="flow-item">
-            <div class="flow-time">${formatTime(f.at)}</div>
-            <div>
-              <div class="flow-route">${escHtml(f.from)} → ${escHtml(f.to)}</div>
-              <div class="flow-remark">${escHtml(f.remark)}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `).join('');
+function renderAllAgents(){
+  const all=Object.keys(agentsStatus);
+  document.getElementById('allAgentsGrid').innerHTML=all.map(id=>agentCardHTML(id)).join('');
 }
 
-// ─── 审计日志 ───
-async function loadAuditLog() {
-  const data = await fetchJSON('/api/audit-log?limit=200');
-  const el = document.getElementById('auditLog');
-  if (!data || !data.lines || data.lines.length === 0) {
-    el.innerHTML = '<span style="color:var(--text2)">暂无审计日志</span>';
-    return;
-  }
-  el.innerHTML = data.lines.map(line => {
-    const m = line.match(/^\[(.+?)\]\s+(\w+)\s+(.*)/);
-    if (m) {
-      return `<div class="audit-line"><span class="ts">[${escHtml(m[1])}]</span> <span class="action">${escHtml(m[2])}</span> ${escHtml(m[3])}</div>`;
-    }
-    return `<div class="audit-line">${escHtml(line)}</div>`;
+function agentCardHTML(id){
+  const a=agentsStatus[id]||{id,name:id,emoji:'🤖',role:'',group:'未知',status:'unknown',sessions:0};
+  const g=a.group||'未知';
+  return `<div class="ag-card g-${g}"><div class="ag-top"><div class="ag-emoji">${a.emoji||'🤖'}</div><div class="ag-info"><div class="ag-name">${esc(a.name||id)}</div><div class="ag-role">${esc(a.role||'')}</div></div></div><div class="ag-bottom"><span class="ag-group t-${g}">${g}</span><div class="ag-status"><span class="hb hb-${a.status==='alive'?'active':a.status==='idle'?'idle':'none'}"></span>${a.sessions||0} 会话</div></div></div>`;
+}
+
+/* ─── Memorials ─── */
+function renderMemorials(){
+  const list=document.getElementById('memorialsList');
+  const done=allTasks.filter(t=>t.state==='Done');
+  if(!done.length){list.innerHTML='<div class="empty"><div class="icon">📜</div><div class="msg">暂无已完成的敕令</div></div>';return}
+  list.innerHTML=done.map(t=>`<div class="mem-card" onclick="showDetail('${t.id}')"><div class="mem-top"><span class="k-card-id">${t.id}</span><span class="mem-badge">已完成</span></div><div class="mem-title">${esc(t.title||'')}</div><div class="k-card-tags"><span class="k-tag org">${esc(t.org||'')}</span><span class="k-tag official">${esc(t.official||'')}</span></div>${t.output?`<div class="mem-output">${esc(t.output).substring(0,300)}</div>`:''}<div class="timeline">${(t.flow_log||[]).map(f=>`<div class="tl-item"><div class="tl-dot">→</div><div class="tl-body"><div class="tl-route">${esc(f.from)} → ${esc(f.to)}</div><div class="tl-remark">${esc(f.remark)}</div><div class="tl-time">${fmtTime(f.at)}</div></div></div>`).join('')}</div></div>`).join('');
+}
+
+/* ─── Audit Log ─── */
+async function loadAuditLog(){
+  const d=await fetchJSON('/api/audit-log?limit=300');
+  const el=document.getElementById('auditLog');
+  const cnt=document.getElementById('logCount');
+  if(!d||!d.lines||!d.lines.length){el.innerHTML='<div style="color:var(--text3)">暂无日志</div>';cnt.textContent='';return}
+  cnt.textContent=d.lines.length+' 条';
+  el.innerHTML=d.lines.map(line=>{
+    const m=line.match(/^\[(.+?)\]\s+(\w+)\s+(.*)/);
+    if(m)return`<div class="log-line"><span class="ts">[${esc(m[1])}]</span> <span class="act">${esc(m[2])}</span> ${esc(m[3])}</div>`;
+    return`<div class="log-line">${esc(line)}</div>`;
   }).join('');
-  el.scrollTop = el.scrollHeight;
+  el.scrollTop=el.scrollHeight;
 }
 
-// ─── 敕令详情弹窗 ───
-async function showTaskDetail(taskId) {
-  const task = await fetchJSON('/api/task?id=' + encodeURIComponent(taskId));
-  if (!task || task.error) return;
-  const modal = document.getElementById('modalContent');
-  modal.innerHTML = `
-    <button class="close-btn" onclick="closeModal()">✕ 关闭</button>
-    <h2>${task.stateLabel || task.state} · ${escHtml(task.title || '')}</h2>
-    <div class="detail-row"><div class="detail-label">敕令编号</div><div class="detail-value">${task.id}</div></div>
-    <div class="detail-row"><div class="detail-label">所属部门</div><div class="detail-value">${escHtml(task.org || '')} · ${escHtml(task.official || '')}</div></div>
-    <div class="detail-row"><div class="detail-label">当前状态</div><div class="detail-value">${task.stateLabel || task.state}</div></div>
-    ${task.progress ? `<div class="detail-row"><div class="detail-label">实时进展</div><div class="detail-value">💭 ${escHtml(task.progress)}</div></div>` : ''}
-    ${task.plan ? `<div class="detail-row"><div class="detail-label">计划进度</div><div class="detail-value">${escHtml(task.plan)}</div></div>` : ''}
-    ${task.now ? `<div class="detail-row"><div class="detail-label">当前动态</div><div class="detail-value">${escHtml(task.now)}</div></div>` : ''}
-    ${task.output ? `<div class="detail-row"><div class="detail-label">产出物</div><div class="detail-value" style="white-space:pre-wrap">${escHtml(task.output)}</div></div>` : ''}
-    ${task.block && task.block !== '无' ? `<div class="detail-row"><div class="detail-label">阻塞项</div><div class="detail-value" style="color:var(--red)">${escHtml(task.block)}</div></div>` : ''}
-    ${(task.todos && task.todos.length) ? `
-      <div class="detail-row">
-        <div class="detail-label">子任务</div>
-        <div class="detail-value">
-          ${task.todos.map(td => `
-            <div style="padding:4px 0;border-bottom:1px solid var(--border)">
-              ${td.status === 'completed' ? '✅' : td.status === 'doing' ? '🔄' : td.status === 'blocked' ? '🔴' : '⬜'}
-              ${escHtml(td.title)}
-              ${td.detail ? `<div style="font-size:12px;color:var(--text2);margin-top:2px">${escHtml(td.detail)}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    ` : ''}
-    <h3 style="color:var(--accent2);margin-top:20px;margin-bottom:12px">📜 流转记录</h3>
-    <div class="flow-timeline">
-      ${(task.flow_log || []).map(f => `
-        <div class="flow-item">
-          <div class="flow-time">${formatTime(f.at)}</div>
-          <div>
-            <div class="flow-route">${escHtml(f.from)} → ${escHtml(f.to)}</div>
-            <div class="flow-remark">${escHtml(f.remark)}</div>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
+/* ─── Detail Modal ─── */
+async function showDetail(id){
+  const t=await fetchJSON('/api/task?id='+encodeURIComponent(id));
+  if(!t||t.error)return;
+  const m=document.getElementById('modalContent');
+  m.innerHTML=`<div class="modal-head"><h2>${t.stateLabel||t.state} · ${esc(t.title||'')}</h2><button class="close-btn" onclick="closeModal()">✕</button></div><div class="d-grid"><div class="d-item"><div class="d-label">编号</div><div class="d-val">${t.id}</div></div><div class="d-item"><div class="d-label">部门 · 经办</div><div class="d-val">${esc(t.org||'')} · ${esc(t.official||'')}</div></div><div class="d-item"><div class="d-label">状态</div><div class="d-val">${t.stateLabel||t.state}</div></div><div class="d-item"><div class="d-label">当前动态</div><div class="d-val">${esc(t.now||'-')}</div></div>${t.progress?`<div class="d-item full"><div class="d-label">实时进展</div><div class="d-val">${esc(t.progress)}</div></div>`:''}${t.plan?`<div class="d-item full"><div class="d-label">计划</div><div class="d-val">${esc(t.plan)}</div></div>`:''}${t.output?`<div class="d-item full"><div class="d-label">产出物</div><div class="d-val" style="white-space:pre-wrap">${esc(t.output)}</div></div>`:''}${t.block&&t.block!=='无'?`<div class="d-item full"><div class="d-label">阻塞项</div><div class="d-val" style="color:var(--red)">${esc(t.block)}</div></div>`:''}</div>${t.todos&&t.todos.length?`<div style="margin-bottom:20px"><div class="d-label" style="margin-bottom:8px">子任务</div>${t.todos.map(td=>`<div class="todo-item"><span class="todo-icon">${td.status==='completed'?'✅':td.status==='doing'?'🔄':td.status==='blocked'?'🔴':'⬜'}</span><div><div class="todo-text">${esc(td.title)}</div>${td.detail?`<div class="todo-detail">${esc(td.detail)}</div>`:''}</div></div>`).join('')}</div>`:''}<div class="d-label" style="margin-bottom:12px">流转记录</div><div class="timeline">${(t.flow_log||[]).map(f=>`<div class="tl-item"><div class="tl-dot">→</div><div class="tl-body"><div class="tl-route">${esc(f.from)} → ${esc(f.to)}</div><div class="tl-remark">${esc(f.remark)}</div><div class="tl-time">${fmtTime(f.at)}</div></div></div>`).join('')}</div>`;
   document.getElementById('modalOverlay').classList.add('show');
 }
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show')}
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
+/* ─── Utils ─── */
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmtTime(iso){if(!iso)return'-';try{return new Date(iso).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}catch{return iso}}
 
-// ─── 工具函数 ───
-function escHtml(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
-function formatTime(iso) {
-  if (!iso) return '-';
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
-  } catch { return iso; }
-}
-
-// ─── ESC 关闭弹窗 ───
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// ─── 启动 ───
+/* ─── Start ─── */
 refreshAll();
-setInterval(refreshAll, 10000);
+refreshTimer=setInterval(refreshAll,10000);
 </script>
 </body>
 </html>

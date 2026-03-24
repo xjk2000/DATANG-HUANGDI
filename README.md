@@ -185,10 +185,6 @@ Dockerfile       容器化支持
 
 ---
 
-## 致谢
-
-灵感来源于 [cft0808/edict](https://github.com/cft0808/edict) 项目，在其基础上进行了完全重新设计：扩展为 17 Agent（原 11 个）、增加五监生产层、引入文件锁和严格状态机、重写权限矩阵和翰林院看板。
-
 ## License
 
 MIT · 作者：XuJiaKai
