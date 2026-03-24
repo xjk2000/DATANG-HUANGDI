@@ -163,7 +163,7 @@ async def handle_message(websocket, data):
     _log(f"📨 {agent_display_name(from_agent)} → {agent_display_name(to_agent) if to_agent else '全体'}: {content[:40]}")
 
 
-async def handler(websocket, path):
+async def handler(websocket):
     """WebSocket 连接处理器"""
     try:
         async for message in websocket:
