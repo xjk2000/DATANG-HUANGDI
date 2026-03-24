@@ -45,6 +45,9 @@ for agent in "${AGENTS[@]}"; do
     continue
   fi
 
+  # 创建或更新启动标记文件
+  echo "started at $(date '+%Y-%m-%d %H:%M:%S')" > "$LOG_DIR/$agent.start"
+
   # 后台启动
   nohup python3 "$SCRIPT_DIR/session/agent_client.py" "$agent" \
     > "$LOG_DIR/$agent.log" 2>&1 &
