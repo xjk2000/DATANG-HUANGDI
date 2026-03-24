@@ -25,6 +25,9 @@ DATA_DIR = os.path.join(REPO_DIR, 'data')
 DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS_DIR = os.path.join(REPO_DIR, 'scripts')
 
+# 确保能导入 scripts/ 下的模块
+sys.path.insert(0, SCRIPTS_DIR)
+
 TASKS_FILE = os.path.join(DATA_DIR, 'tasks_source.json')
 LIVE_STATUS_FILE = os.path.join(DATA_DIR, 'live_status.json')
 AGENT_CONFIG_FILE = os.path.join(DATA_DIR, 'agent_config.json')
@@ -158,6 +161,20 @@ class DiWangHandler(http.server.SimpleHTTPRequestHandler):
             json_response(self, STATE_LABELS)
         elif path == '/api/health':
             json_response(self, {'status': 'ok', 'time': now_iso()})
+        # ─── 飞书渠道 API ────────────────────────────
+        elif path == '/api/feishu/channels':
+            self._api_feishu_channels()
+        elif path == '/api/feishu/test' and 'agent' in query:
+            self._api_feishu_test(query['agent'][0])
+        # ─── 朝堂会话 API ────────────────────────────
+        elif path == '/api/session/inbox' and 'agent' in query:
+            self._api_session_inbox(query)
+        elif path == '/api/session/thread' and 'task' in query:
+            self._api_session_thread(query['task'][0])
+        elif path == '/api/session/conversations':
+            self._api_session_conversations()
+        elif path == '/api/session/routes':
+            self._api_session_routes(query)
         elif path.startswith('/api/'):
             error_response(self, f'未知 API: {path}', 404)
         else:
@@ -187,6 +204,18 @@ class DiWangHandler(http.server.SimpleHTTPRequestHandler):
             self._api_create_task(data)
         elif path == '/api/scheduler-scan':
             self._api_scheduler_scan(data)
+        # ─── 飞书渠道 POST API ───────────────────────
+        elif path == '/api/feishu/save':
+            self._api_feishu_save(data)
+        elif path == '/api/feishu/delete':
+            self._api_feishu_delete(data)
+        elif path == '/api/feishu/toggle':
+            self._api_feishu_toggle(data)
+        # ─── 朝堂会话 POST API ───────────────────────
+        elif path == '/api/session/send':
+            self._api_session_send(data)
+        elif path == '/api/session/ack':
+            self._api_session_ack(data)
         else:
             error_response(self, f'未知 API: {path}', 404)
 
@@ -388,6 +417,172 @@ class DiWangHandler(http.server.SimpleHTTPRequestHandler):
             'staleTasks': stale,
             'thresholdSec': threshold_sec,
         })
+
+    # ─── 飞书渠道 APIs ─────────────────────────────────────
+
+    def _api_feishu_channels(self):
+        """获取所有飞书渠道配置"""
+        from feishu.config import get_all_channels
+        channels = get_all_channels()
+        # 合并 Agent 元数据
+        result = {}
+        for agent_id, meta in AGENT_META.items():
+            ch = channels.get(agent_id, {})
+            result[agent_id] = {
+                **meta,
+                'agent_id': agent_id,
+                'configured': bool(ch),
+                'enabled': ch.get('enabled', False),
+                'app_id': ch.get('app_id', ''),
+                'bot_name': ch.get('bot_name', ''),
+                'updated_at': ch.get('updated_at', ''),
+            }
+        json_response(self, result)
+
+    def _api_feishu_test(self, agent_id):
+        """测试飞书渠道连接"""
+        from feishu.config import test_channel
+        result = test_channel(agent_id)
+        json_response(self, result)
+
+    def _api_feishu_save(self, data):
+        """保存飞书渠道配置"""
+        from feishu.config import save_channel
+        agent_id = data.get('agent_id', '')
+        app_id = data.get('app_id', '')
+        app_secret = data.get('app_secret', '')
+        bot_name = data.get('bot_name', '')
+
+        if not agent_id or not app_id or not app_secret:
+            error_response(self, '缺少必要参数: agent_id, app_id, app_secret')
+            return
+
+        if agent_id not in AGENT_META:
+            error_response(self, f'未知 Agent: {agent_id}')
+            return
+
+        ch = save_channel(agent_id, app_id, app_secret, bot_name)
+        json_response(self, {'ok': True, 'channel': ch})
+
+    def _api_feishu_delete(self, data):
+        """删除飞书渠道配置"""
+        from feishu.config import delete_channel
+        agent_id = data.get('agent_id', '')
+        if not agent_id:
+            error_response(self, '缺少必要参数: agent_id')
+            return
+        ok = delete_channel(agent_id)
+        if ok:
+            json_response(self, {'ok': True})
+        else:
+            error_response(self, f'未找到配置: {agent_id}', 404)
+
+    def _api_feishu_toggle(self, data):
+        """启用/禁用飞书渠道"""
+        from feishu.config import toggle_channel
+        agent_id = data.get('agent_id', '')
+        enabled = data.get('enabled', True)
+        if not agent_id:
+            error_response(self, '缺少必要参数: agent_id')
+            return
+        ok = toggle_channel(agent_id, enabled)
+        if ok:
+            json_response(self, {'ok': True})
+        else:
+            error_response(self, f'未找到配置: {agent_id}', 404)
+
+    # ─── 朝堂会话 APIs ─────────────────────────────────────
+
+    def _api_session_inbox(self, query):
+        """获取 Agent 收件箱"""
+        from session.session_store import get_inbox, count_inbox
+        agent_id = query['agent'][0]
+        status_filter = query.get('status', [None])[0]
+        messages = get_inbox(agent_id, status_filter)
+        pending = count_inbox(agent_id, 'pending')
+        json_response(self, {
+            'agent': agent_id,
+            'messages': messages,
+            'total': len(messages),
+            'pending': pending,
+        })
+
+    def _api_session_thread(self, task_id):
+        """获取任务会话线程"""
+        from session.session_store import get_thread
+        thread = get_thread(task_id)
+        json_response(self, {'task_id': task_id, 'messages': thread, 'total': len(thread)})
+
+    def _api_session_conversations(self):
+        """列出所有会话"""
+        from session.session_store import list_conversations, get_thread
+        tasks = list_conversations()
+        result = []
+        for task_id in tasks:
+            thread = get_thread(task_id)
+            result.append({'task_id': task_id, 'message_count': len(thread)})
+        json_response(self, result)
+
+    def _api_session_routes(self, query):
+        """获取路由表"""
+        from session.router import ROUTING_TABLE, get_allowed_targets, get_upstream
+        from session.message import agent_display_name
+        agent_id = query.get('agent', [None])[0]
+        if agent_id:
+            json_response(self, {
+                'agent': agent_id,
+                'name': agent_display_name(agent_id),
+                'can_send_to': get_allowed_targets(agent_id),
+                'receives_from': get_upstream(agent_id),
+            })
+        else:
+            routes = {}
+            for aid in ROUTING_TABLE:
+                routes[aid] = {
+                    'name': agent_display_name(aid),
+                    'can_send_to': get_allowed_targets(aid),
+                    'receives_from': get_upstream(aid),
+                }
+            json_response(self, routes)
+
+    def _api_session_send(self, data):
+        """通过 API 发送朝堂消息"""
+        from session.message_bus import bus
+        from session.router import RoutingError
+        required = ('from_agent', 'to_agent', 'task_id', 'msg_type', 'content')
+        for key in required:
+            if not data.get(key):
+                error_response(self, f'缺少必要参数: {key}')
+                return
+        try:
+            msg = bus.send(
+                from_agent=data['from_agent'],
+                to_agent=data['to_agent'],
+                task_id=data['task_id'],
+                msg_type=data['msg_type'],
+                content=data['content'],
+                ref_msg_id=data.get('ref_msg_id', ''),
+                metadata=data.get('metadata'),
+            )
+            json_response(self, {'ok': True, 'message': msg})
+        except RoutingError as e:
+            error_response(self, f'路由拒绝: {e}')
+        except ValueError as e:
+            error_response(self, str(e))
+
+    def _api_session_ack(self, data):
+        """确认消息已处理"""
+        from session.message_bus import bus
+        agent_id = data.get('agent_id', '')
+        msg_id = data.get('msg_id', '')
+        if not agent_id or not msg_id:
+            error_response(self, '缺少必要参数: agent_id, msg_id')
+            return
+        ok = bus.ack(agent_id, msg_id)
+        if ok:
+            json_response(self, {'ok': True})
+        else:
+            error_response(self, f'消息不存在: {msg_id}', 404)
 
 
 # ─── 启动服务器 ─────────────────────────────────────────────

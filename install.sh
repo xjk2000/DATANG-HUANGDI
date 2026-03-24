@@ -105,9 +105,15 @@ create_workspaces() {
       sed "s|__REPO_DIR__|$REPO_DIR|g" "$REPO_DIR/agents/$agent/SOUL.md" > "$ws/SOUL.md"
     fi
 
-    # 通用 AGENTS.md（工作协议）
-    cat > "$ws/AGENTS.md" << 'AGENTS_EOF'
-
+    # 部署 AGENTS.md（只在不存在时创建，避免覆盖定制版本）
+    if [ -f "$REPO_DIR/agents/$agent/AGENTS.md" ]; then
+      # 如果项目中有定制的 AGENTS.md，使用它
+      if [ ! -f "$ws/AGENTS.md" ] || [ "$REPO_DIR/agents/$agent/AGENTS.md" -nt "$ws/AGENTS.md" ]; then
+        cp "$REPO_DIR/agents/$agent/AGENTS.md" "$ws/AGENTS.md"
+      fi
+    elif [ ! -f "$ws/AGENTS.md" ]; then
+      # 否则创建通用版本（仅在不存在时）
+      cat > "$ws/AGENTS.md" << 'AGENTS_EOF'
 # AGENTS.md · 帝王系统工作协议
 
 1. 接到派令先回复「已接令」或「臣xxx已接旨」。
@@ -118,6 +124,7 @@ create_workspaces() {
 6. 严禁篡改其他 Agent 的 workspace 文件。
 7. 严禁在未授权的情况下联系权限矩阵之外的 Agent。
 AGENTS_EOF
+    fi
 
     log "Workspace: $ws"
   done
@@ -213,6 +220,8 @@ init_data() {
   info "初始化数据目录..."
 
   mkdir -p "$REPO_DIR/data"
+  mkdir -p "$REPO_DIR/data/inbox"
+  mkdir -p "$REPO_DIR/data/conversations"
 
   # 初始化空文件
   for f in live_status.json agent_config.json dashboard_summary.json; do
@@ -259,6 +268,11 @@ data_dir.mkdir(exist_ok=True)
 (data_dir / 'tasks_source.json').write_text(json.dumps(tasks, ensure_ascii=False, indent=2))
 print('tasks_source.json 已初始化')
 PYEOF
+  fi
+
+  # 初始化飞书渠道配置
+  if [ ! -f "$REPO_DIR/data/feishu_channels.json" ]; then
+    echo '{}' > "$REPO_DIR/data/feishu_channels.json"
   fi
 
   log "数据目录初始化完成: $REPO_DIR/data"
@@ -384,7 +398,32 @@ restart_gateway() {
   fi
 }
 
-# ── Step 6: 创建 .gitignore ──────────────────────────────
+# ── Step 6: 启动 Dashboard 服务器 ──────────────────────────
+start_dashboard() {
+  info "启动 Dashboard 服务器..."
+
+  # 检查是否已在运行
+  if pgrep -f "python3.*dashboard/server.py" > /dev/null; then
+    warn "Dashboard 已在运行，跳过启动"
+    return
+  fi
+
+  # 后台启动
+  cd "$REPO_DIR"
+  nohup python3 dashboard/server.py > "$REPO_DIR/data/dashboard.log" 2>&1 &
+  DASHBOARD_PID=$!
+  sleep 2
+
+  # 验证启动
+  if ps -p $DASHBOARD_PID > /dev/null 2>&1; then
+    log "Dashboard 已启动 (PID: $DASHBOARD_PID)"
+    log "访问地址: http://127.0.0.1:7891"
+  else
+    warn "Dashboard 启动失败，请查看日志: $REPO_DIR/data/dashboard.log"
+  fi
+}
+
+# ── Step 7: 创建 .gitignore ──────────────────────────────
 create_gitignore() {
   if [ ! -f "$REPO_DIR/.gitignore" ]; then
     cat > "$REPO_DIR/.gitignore" << 'EOF'
@@ -396,6 +435,7 @@ __pycache__/
 *.bak.*
 node_modules/
 dist/
+*.log
 EOF
     log ".gitignore 已创建"
   fi
@@ -413,6 +453,7 @@ setup_visibility
 sync_auth
 first_sync
 restart_gateway
+start_dashboard
 create_gitignore
 
 echo ""
@@ -444,9 +485,14 @@ echo "  🌾 司农监 (sinong)   - 算法与数据"
 echo ""
 echo "下一步："
 echo "  1. 启动数据刷新:   bash scripts/run_loop.sh &"
-echo "  2. 启动看板服务器:  python3 dashboard/server.py"
-echo "  3. 打开看板:       open http://127.0.0.1:7891"
+echo "  2. 打开看板:       open http://127.0.0.1:7891"
+echo "  3. 配置飞书渠道:   http://127.0.0.1:7891/channels.html"
 echo "  4. 向中书令下旨:   在 OpenClaw 中对 zhongshuling 发消息"
+echo ""
+echo "朝堂会话命令："
+echo "  发送消息:  python3 scripts/session/cli.py send <from> <to> <task_id> <msg_type> <内容>"
+echo "  查看收件箱: python3 scripts/session/cli.py inbox <agent_id>"
+echo "  查看路由表: python3 scripts/session/cli.py routes"
 echo ""
 warn "如 API Key 未同步，请运行: ./install.sh"
 info "文档: README.md"
