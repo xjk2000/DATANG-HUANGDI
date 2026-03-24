@@ -126,6 +126,15 @@ create_workspaces() {
 AGENTS_EOF
     fi
 
+    # 部署其他配置文件（TOOLS.md、IDENTITY.md、MEMORY.md、USER.md、HEARTBEAT.md）
+    for config_file in TOOLS.md IDENTITY.md MEMORY.md USER.md HEARTBEAT.md; do
+      if [ -f "$REPO_DIR/agents/$agent/$config_file" ]; then
+        if [ ! -f "$ws/$config_file" ] || [ "$REPO_DIR/agents/$agent/$config_file" -nt "$ws/$config_file" ]; then
+          cp "$REPO_DIR/agents/$agent/$config_file" "$ws/$config_file"
+        fi
+      fi
+    done
+
     log "Workspace: $ws"
   done
 }
