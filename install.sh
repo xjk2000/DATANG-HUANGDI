@@ -458,6 +458,42 @@ start_court_server() {
   fi
 }
 
+# ── Step 6.6: 启动所有 Agent 朝堂监听客户端 ─────────────
+start_agent_listeners() {
+  info "启动所有 Agent 朝堂监听客户端..."
+
+  AGENTS=(
+    zhongshuling zhongshu_sheren
+    shizhong jishizhong
+    shangshuling
+    libu hubu libu_protocol bingbu xingbu gongbu
+    jiangzuo shaofu junqi dushui sinong
+  )
+
+  # 创建日志目录
+  mkdir -p "$REPO_DIR/data/agent_listeners"
+
+  # 启动每个 Agent 的监听客户端
+  local started=0
+  for agent in "${AGENTS[@]}"; do
+    # 检查是否已在运行
+    if pgrep -f "agent_client.py $agent" > /dev/null; then
+      log "  $agent 监听已在运行，跳过"
+      continue
+    fi
+
+    # 后台启动
+    nohup python3 "$REPO_DIR/scripts/session/agent_client.py" "$agent" \
+      > "$REPO_DIR/data/agent_listeners/$agent.log" 2>&1 &
+    
+    started=$((started + 1))
+  done
+
+  sleep 2
+  log "已启动 $started 个 Agent 监听客户端"
+  log "日志目录: $REPO_DIR/data/agent_listeners/"
+}
+
 # ── Step 7: 创建 .gitignore ──────────────────────────────
 create_gitignore() {
   if [ ! -f "$REPO_DIR/.gitignore" ]; then
@@ -490,6 +526,7 @@ first_sync
 restart_gateway
 start_dashboard
 start_court_server
+start_agent_listeners
 create_gitignore
 
 echo ""
@@ -526,17 +563,21 @@ echo "  3. 进入朝堂:       open http://127.0.0.1:7891/court.html"
 echo "  4. 配置飞书渠道:   http://127.0.0.1:7891/channels.html"
 echo ""
 echo "朝堂会话室（实时群聊）："
-echo "  Web 界面:  http://127.0.0.1:7891/court.html"
-echo "  启动 Agent 监听（每个 Agent 一个终端）："
-echo "    python3 scripts/session/agent_client.py zhongshuling"
-echo "    python3 scripts/session/agent_client.py shizhong"
-echo "    python3 scripts/session/agent_client.py shangshuling"
-echo "  Agent 会自动监听朝堂消息，收到 to:自己 时自动接旨并调用 OpenClaw"
+echo "  ✅ 朝堂服务器已启动:  ws://127.0.0.1:7893"
+echo "  ✅ 所有 Agent 已自动进入朝堂监听"
+echo "  📋 Web 界面:  http://127.0.0.1:7891/court.html"
+echo "  📂 Agent 日志: data/agent_listeners/<agent_id>.log"
 echo ""
-echo "CLI 命令（可选）："
-echo "  发送消息:  python3 scripts/session/cli.py send <from> <to> <task_id> <msg_type> <内容>"
-echo "  查看收件箱: python3 scripts/session/cli.py inbox <agent_id>"
-echo "  查看路由表: python3 scripts/session/cli.py routes"
+echo "使用方式："
+echo "  1. 打开 Web 界面，在朝堂中下旨"
+echo "  2. Agent 收到 to:自己 的消息后自动接旨并调用 OpenClaw"
+echo "  3. 查看 Agent 日志: tail -f data/agent_listeners/zhongshuling.log"
+echo ""
+echo "管理命令："
+echo "  查看所有监听进程:  pgrep -af agent_client.py"
+echo "  停止所有监听:      pkill -f agent_client.py"
+echo "  重启单个 Agent:    pkill -f 'agent_client.py zhongshuling' && \\"
+echo "                     nohup python3 scripts/session/agent_client.py zhongshuling > data/agent_listeners/zhongshuling.log 2>&1 &"
 echo ""
 warn "如 API Key 未同步，请运行: ./install.sh"
 info "文档: README.md"
