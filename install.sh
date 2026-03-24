@@ -423,6 +423,41 @@ start_dashboard() {
   fi
 }
 
+# ── Step 6.5: 启动朝堂 WebSocket 服务器 ──────────────────
+start_court_server() {
+  info "启动朝堂 WebSocket 服务器..."
+
+  # 检查是否已在运行
+  if pgrep -f "python3.*session/server.py" > /dev/null; then
+    warn "朝堂服务器已在运行，跳过启动"
+    return
+  fi
+
+  # 检查 websockets 模块
+  if ! python3 -c "import websockets" 2>/dev/null; then
+    warn "未安装 websockets 模块，正在安装..."
+    pip3 install websockets --quiet || {
+      warn "websockets 安装失败，请手动安装: pip3 install websockets"
+      return
+    }
+  fi
+
+  # 后台启动
+  cd "$REPO_DIR"
+  nohup python3 scripts/session/server.py > "$REPO_DIR/data/court_server.log" 2>&1 &
+  COURT_PID=$!
+  sleep 2
+
+  # 验证启动
+  if ps -p $COURT_PID > /dev/null 2>&1; then
+    log "朝堂服务器已启动 (PID: $COURT_PID)"
+    log "WebSocket: ws://127.0.0.1:7893"
+    log "Web 界面: http://127.0.0.1:7891/court.html"
+  else
+    warn "朝堂服务器启动失败，请查看日志: $REPO_DIR/data/court_server.log"
+  fi
+}
+
 # ── Step 7: 创建 .gitignore ──────────────────────────────
 create_gitignore() {
   if [ ! -f "$REPO_DIR/.gitignore" ]; then
@@ -454,6 +489,7 @@ sync_auth
 first_sync
 restart_gateway
 start_dashboard
+start_court_server
 create_gitignore
 
 echo ""
@@ -486,10 +522,18 @@ echo ""
 echo "下一步："
 echo "  1. 启动数据刷新:   bash scripts/run_loop.sh &"
 echo "  2. 打开看板:       open http://127.0.0.1:7891"
-echo "  3. 配置飞书渠道:   http://127.0.0.1:7891/channels.html"
-echo "  4. 向中书令下旨:   在 OpenClaw 中对 zhongshuling 发消息"
+echo "  3. 进入朝堂:       open http://127.0.0.1:7891/court.html"
+echo "  4. 配置飞书渠道:   http://127.0.0.1:7891/channels.html"
 echo ""
-echo "朝堂会话命令："
+echo "朝堂会话室（实时群聊）："
+echo "  Web 界面:  http://127.0.0.1:7891/court.html"
+echo "  启动 Agent 监听（每个 Agent 一个终端）："
+echo "    python3 scripts/session/agent_client.py zhongshuling"
+echo "    python3 scripts/session/agent_client.py shizhong"
+echo "    python3 scripts/session/agent_client.py shangshuling"
+echo "  Agent 会自动监听朝堂消息，收到 to:自己 时自动接旨并调用 OpenClaw"
+echo ""
+echo "CLI 命令（可选）："
 echo "  发送消息:  python3 scripts/session/cli.py send <from> <to> <task_id> <msg_type> <内容>"
 echo "  查看收件箱: python3 scripts/session/cli.py inbox <agent_id>"
 echo "  查看路由表: python3 scripts/session/cli.py routes"
