@@ -29,6 +29,11 @@ while true; do
     # 同步 OpenClaw 运行时数据
     python3 "$REPO_DIR/scripts/sync_from_openclaw.py" 2>/dev/null || true
 
+    # 同步 OpenClaw 会话到看板
+    if [ -f "$REPO_DIR/scripts/sync_sessions_to_kanban.py" ]; then
+        python3 "$REPO_DIR/scripts/sync_sessions_to_kanban.py" 2>/dev/null || true
+    fi
+
     # 刷新看板实时数据
     if [ -f "$REPO_DIR/scripts/refresh_live_data.py" ]; then
         python3 "$REPO_DIR/scripts/refresh_live_data.py" 2>/dev/null || true
