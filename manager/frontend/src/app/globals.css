@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-heading: 'Noto Sans SC', system-ui, sans-serif;
+  --font-body: 'Noto Sans SC', system-ui, sans-serif;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* 唐制主题配色 */
+.bg-imperial {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.text-gold {
+  color: #d4a017;
+}
+
+.border-gold {
+  border-color: #d4a017;
+}
+
+/* 状态颜色 */
+.state-imperial { @apply bg-yellow-100 text-yellow-800; }
+.state-draft { @apply bg-blue-100 text-blue-800; }
+.state-review { @apply bg-purple-100 text-purple-800; }
+.state-approved { @apply bg-green-100 text-green-800; }
+.state-rejected { @apply bg-red-100 text-red-800; }
+.state-dispatching { @apply bg-indigo-100 text-indigo-800; }
+.state-executing { @apply bg-orange-100 text-orange-800; }
+.state-done { @apply bg-emerald-100 text-emerald-800; }
+.state-cancelled { @apply bg-gray-100 text-gray-800; }
+.state-blocked { @apply bg-rose-100 text-rose-800; }
+
+/* Agent 状态指示 */
+.status-alive { @apply bg-emerald-500; }
+.status-idle { @apply bg-yellow-500; }
+.status-inactive { @apply bg-gray-400; }
+.status-unknown { @apply bg-gray-300; }

@@ -1,0 +1,26 @@
+name: diwang-manager
+
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DIWANG_REPO_DIR: /app/data
+      DIWANG_OPENCLAW_HOME: ${OPENCLAW_HOME:-/root/.openclaw}
+      DIWANG_DATABASE_URL: sqlite+aiosqlite:////app/data/diwang.db
+      DIWANG_CORS_ORIGINS: http://localhost:3000
+    volumes:
+      - ../data:/app/data
+      - ${OPENCLAW_HOME:-~/.openclaw}:/root/.openclaw:ro
+    ports:
+      - "${BACKEND_PORT:-7900}:7900"
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:7900
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
