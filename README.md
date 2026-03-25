@@ -118,6 +118,8 @@ Agent 之间不是想聊就能聊的。权限矩阵确保分权制衡：
 
 **前置条件**：[OpenClaw](https://openclaw.ai) 已安装、Python 3.9+、macOS 或 Linux
 
+### 基础安装
+
 ```bash
 # 1. 克隆项目
 git clone https://github.com/xjk2000/DATANG-HUANGDI.git
@@ -133,6 +135,32 @@ bash scripts/run_loop.sh &         # 后台运行数据刷新
 # 4. 开始下旨
 openclaw chat --agent zhongshuling
 ```
+
+### 环境变量配置（可选）
+
+项目支持通过环境变量自定义路径，适用于 Docker、多用户环境或自定义安装位置：
+
+```bash
+# 复制环境变量示例文件
+cp .env.example .env
+
+# 编辑配置（可选）
+# OPENCLAW_HOME=/custom/path/to/openclaw  # 默认为 ~/.openclaw
+# REPO_DIR=/custom/path/to/claw-diwang    # 默认为项目根目录
+
+# 加载环境变量
+source .env
+
+# 运行安装
+./install.sh
+```
+
+**环境变量说明**：
+
+- `OPENCLAW_HOME` - OpenClaw 安装目录（默认：`~/.openclaw`）
+- `REPO_DIR` - 帝王系统项目根目录（默认：脚本所在目录）
+
+这使得项目可以在不同环境中灵活部署，无需修改代码。
 
 你也可以跳过三省流程，直接对具体 Agent 下令：
 

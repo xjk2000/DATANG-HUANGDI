@@ -6,7 +6,8 @@
 set -e
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OC_HOME="$HOME/.openclaw"
+# 支持通过环境变量配置 OpenClaw 路径，默认为 ~/.openclaw
+OC_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
 OC_CFG="$OC_HOME/openclaw.json"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; CYAN='\033[0;36m'; NC='\033[0m'

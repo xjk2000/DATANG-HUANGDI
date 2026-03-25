@@ -15,7 +15,8 @@ from pathlib import Path
 
 REPO_DIR = os.environ.get('REPO_DIR', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(REPO_DIR, 'data')
-OC_HOME = os.path.join(str(Path.home()), '.openclaw')
+# 支持通过环境变量配置 OpenClaw 路径，默认为 ~/.openclaw
+OC_HOME = os.environ.get('OPENCLAW_HOME', os.path.join(str(Path.home()), '.openclaw'))
 
 # 所有 Agent ID
 ALL_AGENTS = [
