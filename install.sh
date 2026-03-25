@@ -433,54 +433,6 @@ start_dashboard() {
   fi
 }
 
-# ── Step 6.5: 启动朝堂 WebSocket 服务器 ──────────────────
-start_court_server() {
-  info "启动朝堂 WebSocket 服务器..."
-
-  # 先停止旧的服务器进程（确保使用最新版本）
-  if pgrep -f "python3.*session/server.py" > /dev/null; then
-    warn "检测到旧的朝堂服务器，正在停止..."
-    pkill -f "python3.*session/server.py" || true
-    sleep 2
-  fi
-
-  # 检查 websockets 模块
-  if ! python3 -c "import websockets" 2>/dev/null; then
-    warn "未安装 websockets 模块，正在安装..."
-    pip3 install websockets --quiet || {
-      warn "websockets 安装失败，请手动安装: pip3 install websockets"
-      return
-    }
-  fi
-
-  # 后台启动
-  cd "$REPO_DIR"
-  nohup python3 scripts/session/server.py > "$REPO_DIR/data/court_server.log" 2>&1 &
-  COURT_PID=$!
-  sleep 2
-
-  # 验证启动
-  if ps -p $COURT_PID > /dev/null 2>&1; then
-    log "朝堂服务器已启动 (PID: $COURT_PID)"
-    log "WebSocket: ws://127.0.0.1:7893"
-    log "Web 界面: http://127.0.0.1:7891/court.html"
-  else
-    warn "朝堂服务器启动失败，请查看日志: $REPO_DIR/data/court_server.log"
-  fi
-}
-
-# ── Step 6.6: 启动所有 Agent 朝堂监听客户端 ─────────────
-start_agent_listeners() {
-  info "启动所有 Agent 朝堂监听客户端..."
-  
-  # 调用独立的启动脚本
-  if [ -f "$REPO_DIR/scripts/start_all_agents.sh" ]; then
-    bash "$REPO_DIR/scripts/start_all_agents.sh"
-  else
-    warn "未找到 scripts/start_all_agents.sh，跳过 Agent 监听启动"
-  fi
-}
-
 # ── Step 7: 创建 .gitignore ──────────────────────────────
 create_gitignore() {
   if [ ! -f "$REPO_DIR/.gitignore" ]; then
@@ -512,8 +464,6 @@ sync_auth
 first_sync
 restart_gateway
 start_dashboard
-start_court_server
-start_agent_listeners
 create_gitignore
 
 echo ""
@@ -546,26 +496,18 @@ echo ""
 echo "下一步："
 echo "  1. 启动数据刷新:   bash scripts/run_loop.sh &"
 echo "  2. 打开看板:       open http://127.0.0.1:7891"
-echo "  3. 进入朝堂:       open http://127.0.0.1:7891/court.html"
-echo "  4. 配置飞书渠道:   http://127.0.0.1:7891/channels.html"
+echo "  3. 配置飞书渠道:   http://127.0.0.1:7891/channels.html"
+echo "  4. 向中书令下旨:   在 OpenClaw 中对 zhongshuling 发消息"
 echo ""
-echo "朝堂会话室（实时群聊）："
-echo "  ✅ 朝堂服务器已启动:  ws://127.0.0.1:7893"
-echo "  ✅ 所有 Agent 已自动进入朝堂监听"
-echo "  📋 Web 界面:  http://127.0.0.1:7891/court.html"
-echo "  📂 Agent 日志: data/agent_listeners/<agent_id>.log"
+echo "Agent Workspace 位置："
+echo "  ~/.openclaw/workspace-<agent_id>/"
 echo ""
-echo "使用方式："
-echo "  1. 打开 Web 界面，在朝堂中下旨"
-echo "  2. Agent 收到 to:自己 的消息后自动接旨并调用 OpenClaw"
-echo "  3. 查看 Agent 日志: tail -f data/agent_listeners/zhongshuling.log"
-echo ""
-echo "管理命令："
-echo "  启动所有 Agent:    bash scripts/start_all_agents.sh"
-echo "  查看所有监听进程:  pgrep -af agent_client.py"
-echo "  停止所有监听:      pkill -f agent_client.py"
-echo "  重启单个 Agent:    pkill -f 'agent_client.py zhongshuling' && \\"
-echo "                     nohup python3 scripts/session/agent_client.py zhongshuling > data/agent_listeners/zhongshuling.log 2>&1 &"
+echo "配置文件已部署："
+echo "  ✅ SOUL.md      - Agent 灵魂定义"
+echo "  ✅ AGENTS.md    - 工作协议"
+echo "  ✅ TOOLS.md     - 工具和命令说明"
+echo "  ✅ IDENTITY.md  - 身份定义"
+echo "  ✅ MEMORY.md    - 记忆管理规则"
 echo ""
 warn "如 API Key 未同步，请运行: ./install.sh"
 info "文档: README.md"
