@@ -43,6 +43,17 @@ check_deps() {
   fi
   log "Python3: $(python3 --version)"
 
+  if ! command -v node &>/dev/null; then
+    warn "未找到 Node.js，Manager 前端将无法启动"
+    warn "请安装 Node.js 20+: https://nodejs.org"
+  else
+    log "Node.js: $(node --version)"
+  fi
+
+  if ! command -v pip3 &>/dev/null && ! python3 -m pip --version &>/dev/null 2>&1; then
+    warn "未找到 pip，Manager 后端依赖将无法安装"
+  fi
+
   if [ ! -f "$OC_CFG" ]; then
     error "未找到 openclaw.json。请先运行 openclaw 完成初始化。"
     exit 1
@@ -434,7 +445,104 @@ start_dashboard() {
   fi
 }
 
-# ── Step 7: 创建 .gitignore ──────────────────────────────
+# ── Step 7: 安装 Manager 依赖 ─────────────────────────────
+install_manager_deps() {
+  info "安装 Manager 管理后台依赖..."
+
+  MANAGER_DIR="$REPO_DIR/manager"
+  if [ ! -d "$MANAGER_DIR" ]; then
+    warn "未找到 manager 目录，跳过"
+    return
+  fi
+
+  # 后端依赖
+  if [ -f "$MANAGER_DIR/backend/requirements.txt" ]; then
+    info "安装后端 Python 依赖..."
+    if python3 -m pip install -r "$MANAGER_DIR/backend/requirements.txt" --quiet 2>/dev/null; then
+      log "后端依赖安装完成"
+    elif pip3 install -r "$MANAGER_DIR/backend/requirements.txt" --quiet 2>/dev/null; then
+      log "后端依赖安装完成"
+    else
+      warn "后端依赖安装失败，请手动执行: pip install -r manager/backend/requirements.txt"
+    fi
+  fi
+
+  # 前端依赖
+  if [ -f "$MANAGER_DIR/frontend/package.json" ] && command -v node &>/dev/null; then
+    info "安装前端 Node.js 依赖..."
+    cd "$MANAGER_DIR/frontend"
+    if command -v npm &>/dev/null; then
+      npm install --silent 2>/dev/null && log "前端依赖安装完成" || warn "前端依赖安装失败，请手动执行: cd manager/frontend && npm install"
+    else
+      warn "未找到 npm，请手动安装前端依赖"
+    fi
+    cd "$REPO_DIR"
+  else
+    warn "跳过前端依赖安装（Node.js 未安装）"
+  fi
+}
+
+# ── Step 8: 启动 Manager 管理后台 ─────────────────────────
+start_manager() {
+  info "启动 Manager 管理后台..."
+
+  MANAGER_DIR="$REPO_DIR/manager"
+  if [ ! -d "$MANAGER_DIR" ]; then
+    warn "未找到 manager 目录，跳过"
+    return
+  fi
+
+  # ── 启动后端 ──
+  if python3 -c "import fastapi" 2>/dev/null; then
+    # 停止旧的 Manager 后端进程
+    if pgrep -f "uvicorn.*app.main:app.*7900" > /dev/null 2>&1; then
+      warn "检测到旧的 Manager 后端，正在停止..."
+      pkill -f "uvicorn.*app.main:app.*7900" || true
+      sleep 2
+    fi
+
+    cd "$MANAGER_DIR/backend"
+    nohup python3 -m uvicorn app.main:app --host 0.0.0.0 --port 7900 > "$REPO_DIR/data/manager-backend.log" 2>&1 &
+    MANAGER_BACKEND_PID=$!
+    sleep 3
+
+    if ps -p $MANAGER_BACKEND_PID > /dev/null 2>&1; then
+      log "Manager 后端已启动 (PID: $MANAGER_BACKEND_PID, 端口: 7900)"
+    else
+      warn "Manager 后端启动失败，请查看日志: $REPO_DIR/data/manager-backend.log"
+    fi
+    cd "$REPO_DIR"
+  else
+    warn "FastAPI 未安装，跳过 Manager 后端启动"
+    warn "请执行: pip install -r manager/backend/requirements.txt"
+  fi
+
+  # ── 启动前端 ──
+  if [ -d "$MANAGER_DIR/frontend/node_modules" ] && command -v node &>/dev/null; then
+    # 停止旧的 Manager 前端进程
+    if pgrep -f "next.*dev.*3000" > /dev/null 2>&1; then
+      warn "检测到旧的 Manager 前端，正在停止..."
+      pkill -f "next.*dev.*3000" || true
+      sleep 2
+    fi
+
+    cd "$MANAGER_DIR/frontend"
+    nohup npx next dev --port 3000 > "$REPO_DIR/data/manager-frontend.log" 2>&1 &
+    MANAGER_FRONTEND_PID=$!
+    sleep 3
+
+    if ps -p $MANAGER_FRONTEND_PID > /dev/null 2>&1; then
+      log "Manager 前端已启动 (PID: $MANAGER_FRONTEND_PID, 端口: 3000)"
+    else
+      warn "Manager 前端启动失败，请查看日志: $REPO_DIR/data/manager-frontend.log"
+    fi
+    cd "$REPO_DIR"
+  else
+    warn "前端依赖未安装或 Node.js 不可用，跳过 Manager 前端启动"
+  fi
+}
+
+# ── Step 9: 创建 .gitignore ──────────────────────────────
 create_gitignore() {
   if [ ! -f "$REPO_DIR/.gitignore" ]; then
     cat > "$REPO_DIR/.gitignore" << 'EOF'
@@ -465,6 +573,8 @@ sync_auth
 first_sync
 restart_gateway
 start_dashboard
+install_manager_deps
+start_manager
 create_gitignore
 
 echo ""
@@ -496,8 +606,9 @@ echo "  🌾 司农监 (sinong)   - 算法与数据"
 echo ""
 echo "下一步："
 echo "  1. 启动数据刷新:   bash scripts/run_loop.sh &"
-echo "  2. 打开看板:       open http://127.0.0.1:7891"
-echo "  3. 向 Agent 下旨:  在 OpenClaw 飞书 channel 中对 Agent 发消息"
+echo "  2. 打开管理后台:   open http://localhost:3000"
+echo "  3. 打开旧看板:     open http://127.0.0.1:7891"
+echo "  4. 向 Agent 下旨:  在 OpenClaw 飞书 channel 中对 Agent 发消息"
 echo ""
 echo "Agent Workspace 位置："
 echo "  ~/.openclaw/workspace-<agent_id>/"
@@ -509,10 +620,16 @@ echo "  ✅ TOOLS.md     - 工具和命令说明"
 echo "  ✅ IDENTITY.md  - 身份定义"
 echo "  ✅ MEMORY.md    - 记忆管理规则"
 echo ""
+echo "服务地址："
+echo "  🖥️  Manager 前端:   http://localhost:3000"
+echo "  📡 Manager API:    http://localhost:7900/docs"
+echo "  📊 旧版 Dashboard: http://127.0.0.1:7891"
+echo ""
 echo "自动同步功能："
 echo "  ✅ OpenClaw 会话自动同步到看板"
 echo "  ✅ 飞书消息自动创建看板任务"
-echo "  ✅ 每 15 秒自动刷新数据"
+echo "  ✅ Manager 后台每 15 秒自动同步数据"
+echo "  ✅ 每 15 秒自动刷新旧版看板数据"
 echo ""
 warn "如 API Key 未同步，请运行: ./install.sh"
 info "文档: README.md"
