@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="帝王系统管理后台",
-    description="大唐皇帝 · 三省六部五监 · 17 Agent 管理系统",
+    description="大唐皇帝 · 三省六部五监 · 16 Agent 管理系统",
     version="1.0.0",
     lifespan=lifespan,
 )

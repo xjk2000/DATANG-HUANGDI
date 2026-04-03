@@ -16,18 +16,18 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 # 合法状态转换
 VALID_TRANSITIONS = {
-    "Imperial": ["ZhongshuDraft"],
-    "ZhongshuDraft": ["ZhongshuReview", "MenxiaReview"],
-    "ZhongshuReview": ["MenxiaReview", "ZhongshuDraft"],
-    "MenxiaReview": ["Approved", "Rejected", "ZhongshuDraft"],
-    "Rejected": ["ZhongshuDraft"],
-    "Approved": ["Dispatching"],
-    "Dispatching": ["Executing"],
-    "Executing": ["Review", "Done", "Blocked"],
-    "Review": ["Done", "Executing", "Blocked"],
-    "Done": [],
-    "Cancelled": [],
-    "Blocked": ["Executing", "Cancelled"],
+    "Imperial":       ["ZhongshuDraft", "Cancelled"],
+    "ZhongshuDraft":  ["ZhongshuReview", "MenxiaReview", "Cancelled"],
+    "ZhongshuReview": ["MenxiaReview", "ZhongshuDraft", "Cancelled"],
+    "MenxiaReview":   ["Approved", "Rejected", "ZhongshuDraft", "Cancelled"],
+    "Rejected":       ["ZhongshuDraft", "Cancelled"],
+    "Approved":       ["Dispatching", "Cancelled"],
+    "Dispatching":    ["Executing", "Cancelled"],
+    "Executing":      ["Review", "Done", "Blocked", "Cancelled"],
+    "Review":         ["Done", "Executing", "Blocked", "Cancelled"],
+    "Done":           [],
+    "Cancelled":      [],
+    "Blocked":        ["Executing", "Cancelled"],
 }
 
 STATE_LABELS = {
@@ -183,10 +183,7 @@ async def change_task_state(
     if data.state not in STATE_LABELS:
         raise HTTPException(status_code=400, detail=f"Invalid state: {data.state}")
 
-    # Cancelled 可以从任何非终态跳转
-    if data.state == "Cancelled" and task.state not in ("Done", "Cancelled"):
-        pass
-    elif data.state not in VALID_TRANSITIONS.get(task.state, []):
+    if data.state not in VALID_TRANSITIONS.get(task.state, []):
         raise HTTPException(
             status_code=400,
             detail=f"非法状态跳转: {task.state} → {data.state}",
@@ -222,6 +219,17 @@ async def complete_task(
     task = await session.get(Task, task_id)
     if not task:
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+
+    if task.state == "Done":
+        raise HTTPException(status_code=409, detail=f"敕令已完成，不可重复操作: {task_id}")
+
+    if task.state not in ("Executing", "Review", "Dispatching"):
+        valid = VALID_TRANSITIONS.get(task.state, [])
+        if "Done" not in valid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"非法状态跳转: {task.state} → Done",
+            )
 
     now = datetime.now(timezone.utc)
     old_state = task.state

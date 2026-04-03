@@ -1,0 +1,14 @@
+{
+  "_comment": "复制为 data/diwang.json 并填写真实配置。data/ 已在 .gitignore 中，不会提交到代码仓库。",
+
+  "project_dir": "/path/to/your/java-or-python-project",
+
+  "sls": {
+    "_comment": "阿里云日志服务 (SLS) 连接参数。建议使用 RAM 子账号，最小权限: log:GetLogs, log:GetLogStore",
+    "endpoint": "cn-hangzhou.log.aliyuncs.com",
+    "ak_id": "YOUR_ACCESS_KEY_ID",
+    "ak_secret": "YOUR_ACCESS_KEY_SECRET",
+    "project": "your-sls-project-name",
+    "logstore": "your-app-logstore"
+  }
+}

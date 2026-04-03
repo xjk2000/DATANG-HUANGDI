@@ -6,7 +6,7 @@
 
 今天，我们面对的问题惊人相似：当十几个 AI Agent 同时工作，谁来决策？谁来审核？谁来执行？谁来兜底？
 
-**大唐皇帝**基于 [OpenClaw](https://openclaw.ai) 平台，将唐制三省六部五监映射为 17 个专职 AI Agent，构建了一套**制度驱动**的多 Agent 协作系统。
+**大唐皇帝**基于 [OpenClaw](https://openclaw.ai) 平台，将唐制三省六部五监映射为 16 个专职 AI Agent，构建了一套**制度驱动**的多 Agent 协作系统。
 
 ---
 
@@ -125,7 +125,7 @@ Agent 之间不是想聊就能聊的。权限矩阵确保分权制衡：
 git clone https://github.com/xjk2000/DATANG-HUANGDI.git
 cd DATANG-HUANGDI
 
-# 2. 一键安装（注册 17 Agent、部署人格文件、配置权限矩阵）
+# 2. 一键安装（注册 16 Agent、部署人格文件、配置权限矩阵）
 chmod +x install.sh && ./install.sh
 
 # 3. 启动翰林院看板（可选）
@@ -171,12 +171,139 @@ openclaw chat --agent xingbu       # 直接找刑部做审计
 
 ---
 
+## SLS 日志诊断（刑部 + 户部联动）
+
+系统内置了**代码 → 日志**的完整诊断链路：刑部从源码中提取真实日志关键词，户部用这些关键词精确查询 SLS，避免凭空猜测查询语句。
+
+### 第一步：配置 `data/diwang.json`
+
+安装时会自动创建此文件，填入两项关键配置：
+
+```json
+{
+  "project_dir": "/path/to/your/project",
+
+  "sls": {
+    "get_logs_script": "~/projects/get_logs.py",
+    "service_filter":  "service:shulex-intelli",
+    "environments": {}
+  }
+}
+```
+
+| 字段 | 说明 |
+|------|------|
+| `project_dir` | 被监控项目的代码根目录（刑部搜索源码用） |
+| `sls.get_logs_script` | 已有 SLS 查询脚本路径（带凭证，默认 `~/projects/get_logs.py`） |
+| `sls.service_filter` | 自动追加到每条查询的服务过滤器 |
+
+> 参考示例：`diwang.json.example`
+
+---
+
+### 第二步：刑部——从源码提取日志关键词
+
+让刑部（或直接手动）运行 `analyze-logs`，从项目代码中找出该功能真实打印的日志内容：
+
+```bash
+python3 scripts/sls_query.py analyze-logs <功能关键词>
+
+# 示例
+python3 scripts/sls_query.py analyze-logs UserLogin
+python3 scripts/sls_query.py analyze-logs OrderCreate
+```
+
+**输出示例：**
+
+```
+🔍 代码日志分析: [UserLogin]
+   项目路径: /path/to/your/project
+────────────────────────────────────────────────────────────────
+📄 找到 2 条日志语句:
+
+  [1] [java] .../UserLoginService.java:45
+       log.info("用户登录成功: userId={}", userId);
+       → 日志内容: "用户登录成功"
+
+  [2] [java] .../UserLoginService.java:68
+       log.error("登录失败: invalid credentials");
+       → 日志内容: "登录失败"
+
+────────────────────────────────────────────────────────────────
+💡 推荐 SLS 查询关键词（直接传给户部）:
+   "用户登录成功"
+   "登录失败"
+
+📋 示例（生产环境，最近 1 小时）:
+   python3 scripts/sls_query.py production \
+     "2025-01-01 00:00:00" "2025-01-01 01:00:00" \
+     '"用户登录成功" OR "登录失败"'
+```
+
+支持 Java / Python / TypeScript / Go 项目，自动降级到 `grep`（若无 `rg`）。
+
+---
+
+### 第三步：户部——用真实关键词查 SLS
+
+```bash
+# 用法：python3 scripts/sls_query.py <环境> "<开始>" "<结束>" "<查询语句>" [--out <文件>]
+
+# 生产环境，用刑部提取的精确关键词
+python3 scripts/sls_query.py production \
+  "2025-01-01 00:00:00" "2025-01-01 01:00:00" \
+  '"用户登录成功" OR "登录失败"'
+
+# 查 ERROR 日志
+python3 scripts/sls_query.py production \
+  "2025-01-01 00:00:00" "2025-01-01 01:00:00" \
+  "UserLogin AND level:ERROR"
+
+# 输出太长时落盘，避免刷屏
+python3 scripts/sls_query.py production \
+  "2025-01-01 00:00:00" "2025-01-01 01:00:00" \
+  "level:ERROR" --out /tmp/sls_err.log
+
+# 测试环境
+python3 scripts/sls_query.py staging \
+  "2025-01-01 00:00:00" "2025-01-01 01:00:00" \
+  "OrderCreate"
+```
+
+> `service:shulex-intelli` 会自动追加到每条查询，无需手动加。
+
+---
+
+### 完整诊断工作流（「查询某功能是否正常」）
+
+```
+你对中书令下旨："检查 UserLogin 功能是否正常"
+           │
+           ▼
+      尚书令并行派发
+      ├── 刑部
+      │   ① analyze-logs UserLogin
+      │      → 找到 "用户登录成功"、"登录失败"
+      │   ② 搜索代码：实现文件、异常处理、测试覆盖
+      │   → 返回：代码分析 + 日志关键词
+      │
+      └── 户部（收到刑部的日志关键词后）
+          ③ query '"用户登录成功" OR "登录失败"'
+             → 精确匹配，结果比模糊搜索准 10 倍
+          → 返回：SLS 查询报告
+           │
+           ▼
+      尚书令汇总 → 综合结论回奏
+```
+
+---
+
 ## 翰林院看板
 
 安装后访问 `http://127.0.0.1:7891`，可以看到：
 
 - **敕令看板** —— 所有任务按状态分栏展示，实时心跳检测
-- **省部调度** —— 17 个 Agent 的活跃状态和会话数
+- **省部调度** —— 16 个 Agent 的活跃状态和会话数
 - **奏折阁** —— 已完成敕令的归档和完整流转记录
 - **审计日志** —— 每一次状态变更、流转、封驳的完整记录
 
@@ -203,7 +330,7 @@ docker compose up -d
 ## 目录说明
 
 ```
-agents/          17 个 Agent 的 SOUL.md 人格文件
+agents/          16 个 Agent 的 SOUL.md 人格文件
 dashboard/       翰林院看板（server.py + index.html）
 scripts/         看板 CLI、文件锁、数据同步脚本
 tests/           端到端测试

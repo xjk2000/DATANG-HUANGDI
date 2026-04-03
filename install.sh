@@ -17,7 +17,7 @@ banner() {
   echo -e "${CYAN}╔══════════════════════════════════════════════╗${NC}"
   echo -e "${CYAN}║  ⚔️  帝王系统 · Claw DiWang                 ║${NC}"
   echo -e "${CYAN}║  中书取旨 · 门下封驳 · 尚书奉而行之           ║${NC}"
-  echo -e "${CYAN}║  三省六部五监 · 17 Agent 安装向导             ║${NC}"
+  echo -e "${CYAN}║  三省六部五监 · 16 Agent 安装向导             ║${NC}"
   echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
   echo ""
 }
@@ -42,6 +42,13 @@ check_deps() {
     exit 1
   fi
   log "Python3: $(python3 --version)"
+
+  PY_MAJOR=$(python3 -c "import sys; print(sys.version_info.major)" 2>/dev/null)
+  PY_MINOR=$(python3 -c "import sys; print(sys.version_info.minor)" 2>/dev/null)
+  if [ -z "$PY_MAJOR" ] || [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 9 ]; }; then
+    error "需要 Python 3.9+，当前: $(python3 --version)"
+    exit 1
+  fi
 
   if ! command -v node &>/dev/null; then
     warn "未找到 Node.js，Manager 前端将无法启动"
@@ -95,7 +102,7 @@ backup_existing() {
 
 # ── Step 1: 创建 Workspace ──────────────────────────────────
 create_workspaces() {
-  info "创建 17 个 Agent Workspace..."
+  info "创建 16 个 Agent Workspace..."
 
   AGENTS=(
     zhongshuling zhongshu_sheren
@@ -117,11 +124,10 @@ create_workspaces() {
       sed "s|__REPO_DIR__|$REPO_DIR|g" "$REPO_DIR/agents/$agent/SOUL.md" > "$ws/SOUL.md"
     fi
 
-    # 部署 AGENTS.md（只在不存在时创建，避免覆盖定制版本）
+    # 部署 AGENTS.md（模板变量替换）
     if [ -f "$REPO_DIR/agents/$agent/AGENTS.md" ]; then
-      # 如果项目中有定制的 AGENTS.md，使用它
       if [ ! -f "$ws/AGENTS.md" ] || [ "$REPO_DIR/agents/$agent/AGENTS.md" -nt "$ws/AGENTS.md" ]; then
-        cp "$REPO_DIR/agents/$agent/AGENTS.md" "$ws/AGENTS.md"
+        sed "s|__REPO_DIR__|$REPO_DIR|g" "$REPO_DIR/agents/$agent/AGENTS.md" > "$ws/AGENTS.md"
       fi
     elif [ ! -f "$ws/AGENTS.md" ]; then
       # 否则创建通用版本（仅在不存在时）
@@ -142,7 +148,7 @@ AGENTS_EOF
     for config_file in TOOLS.md IDENTITY.md MEMORY.md USER.md HEARTBEAT.md; do
       if [ -f "$REPO_DIR/agents/$agent/$config_file" ]; then
         if [ ! -f "$ws/$config_file" ] || [ "$REPO_DIR/agents/$agent/$config_file" -nt "$ws/$config_file" ]; then
-          cp "$REPO_DIR/agents/$agent/$config_file" "$ws/$config_file"
+          sed "s|__REPO_DIR__|$REPO_DIR|g" "$REPO_DIR/agents/$agent/$config_file" > "$ws/$config_file"
         fi
       fi
     done
@@ -153,7 +159,7 @@ AGENTS_EOF
 
 # ── Step 2: 注册 Agents + 权限矩阵 ─────────────────────────
 register_agents() {
-  info "注册 17 个 Agent 并配置权限矩阵..."
+  info "注册 16 个 Agent 并配置权限矩阵..."
 
   python3 << 'PYEOF'
 import json, pathlib, sys
@@ -268,7 +274,7 @@ tasks = [
         "now": "三省六部五监系统已就绪",
         "eta": "-",
         "block": "无",
-        "output": "17 Agent 全部注册，权限矩阵配置完毕",
+        "output": "16 Agent 全部注册，权限矩阵配置完毕",
         "ac": "系统正常运行",
         "progress": "",
         "plan": "",
@@ -455,6 +461,16 @@ install_manager_deps() {
     return
   fi
 
+  # scripts 脚本依赖（sls_query.py 等）
+  if [ -f "$REPO_DIR/scripts/requirements.txt" ]; then
+    info "安装脚本 Python 依赖（aliyun-log-python-sdk 等）..."
+    if python3 -m pip install -r "$REPO_DIR/scripts/requirements.txt" --quiet 2>/dev/null; then
+      log "脚本依赖安装完成"
+    else
+      warn "脚本依赖安装失败，请手动执行: pip install -r scripts/requirements.txt"
+    fi
+  fi
+
   # 后端依赖
   if [ -f "$MANAGER_DIR/backend/requirements.txt" ]; then
     info "安装后端 Python 依赖..."
@@ -542,7 +558,75 @@ start_manager() {
   fi
 }
 
-# ── Step 9: 创建 .gitignore ──────────────────────────────
+# ── Step 9: 配置项目路径和 SLS 参数提示 ──────────
+prompt_project_config() {
+  info "配置被监控项目路径..."
+
+  echo ""
+  echo -e "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}║  📁 配置被监控项目路径（Agent 团队将用此搜索代码）         ║${NC}"
+  echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}"
+  echo ""
+  echo "  Agent 团队需要知道你的项目代码在哪里，才能："
+  echo "  - 将作监 搜索源码中的日志打印语句"
+  echo "  - 刑部 结合日志内容进行功能验证"
+  echo ""
+
+  PROJECT_DIR_INPUT=""
+  if [ -t 0 ]; then
+    read -p "  请输入项目代码路径 [回车跳过]: " PROJECT_DIR_INPUT
+  fi
+
+  # 创建/更新 data/diwang.json
+  mkdir -p "$REPO_DIR/data"
+  local project_dir_val="${PROJECT_DIR_INPUT:-}"
+  cat > "$REPO_DIR/data/diwang.json" << DIWANG_EOF
+{
+  "project_dir": "$project_dir_val",
+  "sls": {
+    "endpoint": "",
+    "ak_id": "",
+    "ak_secret": "",
+    "project": "",
+    "logstore": ""
+  }
+}
+DIWANG_EOF
+
+  if [ -n "$project_dir_val" ]; then
+    log "项目路径已保存到 data/diwang.json: $project_dir_val"
+  else
+    warn "未设置项目路径，请将来编辑 data/diwang.json"
+  fi
+
+  # SLS 配置说明
+  echo ""
+  echo -e "${YELLOW}╔════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${YELLOW}║  📡 SLS 日志服务配置说明                                  ║${NC}"
+  echo -e "${YELLOW}╚════════════════════════════════════════════════════════╝${NC}"
+  echo ""
+  echo "  编辑 $REPO_DIR/data/diwang.json 填写 SLS 参数："
+  echo ""
+  cat << 'SLS_HELP'
+  {
+    "project_dir": "/path/to/your/project",   <- 项目代码路径
+
+    "sls": {
+      "endpoint":  "cn-hangzhou.log.aliyuncs.com",  <- SLS 接入地址
+      "ak_id":     "YOUR_ACCESS_KEY_ID",             <- 阿里云 AK ID
+      "ak_secret": "YOUR_ACCESS_KEY_SECRET",         <- 阿里云 AK Secret
+      "project":   "your-sls-project",               <- SLS Project 名
+      "logstore":  "your-app-log"                    <- 默认 Logstore
+    }
+  }
+SLS_HELP
+  echo ""
+  echo "  ⚠️  data/diwang.json 已在 .gitignore 中，不会提交到代码仓库"
+  echo "  📖 参考示例： $REPO_DIR/diwang.json.example"
+  echo ""
+}
+
+# ── Step 10: 创建 .gitignore ──────────────────
 create_gitignore() {
   if [ ! -f "$REPO_DIR/.gitignore" ]; then
     cat > "$REPO_DIR/.gitignore" << 'EOF'
@@ -555,6 +639,7 @@ __pycache__/
 node_modules/
 dist/
 *.log
+diwang.json
 EOF
     log ".gitignore 已创建"
   fi
@@ -567,11 +652,12 @@ backup_existing
 create_workspaces
 register_agents
 init_data
+prompt_project_config
 link_resources
 setup_visibility
 sync_auth
-first_sync
 restart_gateway
+first_sync
 start_dashboard
 install_manager_deps
 start_manager
@@ -579,7 +665,7 @@ create_gitignore
 
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║  🎉  帝王系统安装完成！17 Agent 已就位！             ║${NC}"
+echo -e "${GREEN}║  🎉  帝王系统安装完成！16 Agent 已就位！             ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo "三省："
@@ -609,6 +695,9 @@ echo "  1. 启动数据刷新:   bash scripts/run_loop.sh &"
 echo "  2. 打开管理后台:   open http://localhost:3000"
 echo "  3. 打开旧看板:     open http://127.0.0.1:7891"
 echo "  4. 向 Agent 下旨:  在 OpenClaw 飞书 channel 中对 Agent 发消息"
+echo ""
+echo -e "${YELLOW}⚠️  必要配置（SLS 日志查询和功能验证）："
+echo -e "   编辑 $REPO_DIR/data/diwang.json，填入 project_dir 和 SLS 参数${NC}"
 echo ""
 echo "Agent Workspace 位置："
 echo "  ~/.openclaw/workspace-<agent_id>/"
