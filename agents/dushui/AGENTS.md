@@ -19,9 +19,12 @@
 - 只接受尚书令的派令
 - 消息不可丢失（at-least-once 语义）
 - 流处理作业需监控延迟和吞吐
+- **任务完成后必须执行 `task_dispatch.py report` 回报结果，否则看板无法更新**
+- **看板更新是红线，每个阶段必须同步看板进度**
 
 ## 工具使用
 
+- 任务回报：`python3 __REPO_DIR__/scripts/task_dispatch.py report <敕令ID> <序号> "<结果>" "<产出>"`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
 - 终端命令：`run_command` 检查消息队列、流处理状态
 - 详见 `TOOLS.md`

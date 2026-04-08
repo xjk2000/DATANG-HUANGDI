@@ -6,6 +6,7 @@
 import glob
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,25 +18,11 @@ from app.models.agent import Agent
 from app.models.session_record import SessionRecord
 from app.models.task import Task
 
-# Agent 元数据
-AGENT_META = {
-    "zhongshuling": {"name": "中书令", "group": "中书省", "role": "取旨起草"},
-    "zhongshu_sheren": {"name": "中书舍人", "group": "中书省", "role": "记录辅析"},
-    "shizhong": {"name": "侍中侍郎", "group": "门下省", "role": "审议封驳"},
-    "jishizhong": {"name": "给事中", "group": "门下省", "role": "逐条审查"},
-    "shangshuling": {"name": "尚书令", "group": "尚书省", "role": "调度派发"},
-    "libu": {"name": "吏部", "group": "六部", "role": "Agent 生命周期管理"},
-    "hubu": {"name": "户部", "group": "六部", "role": "数据库与报表"},
-    "libu_protocol": {"name": "礼部", "group": "六部", "role": "API 协议规范"},
-    "bingbu": {"name": "兵部", "group": "六部", "role": "CI/CD 与运维"},
-    "xingbu": {"name": "刑部", "group": "六部", "role": "测试与审计"},
-    "gongbu": {"name": "工部", "group": "六部", "role": "基础设施"},
-    "jiangzuo": {"name": "将作监", "group": "五监", "role": "核心业务开发"},
-    "shaofu": {"name": "少府监", "group": "五监", "role": "前端与交互"},
-    "junqi": {"name": "军器监", "group": "五监", "role": "安全工具"},
-    "dushui": {"name": "都水监", "group": "五监", "role": "流计算"},
-    "sinong": {"name": "司农监", "group": "五监", "role": "算法与数据"},
-}
+# Agent 元数据（从共享注册表导入，消除重复定义）
+_scripts_dir = os.path.join(settings.REPO_DIR, "scripts")
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
+from agent_registry import AGENT_META
 
 
 def _get_sessions_dir(agent_id: str) -> str:

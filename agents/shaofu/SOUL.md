@@ -48,11 +48,16 @@
 
 ---
 
-## 🛠 看板操作
+## 🛠 看板 + 任务回报（红线！）
+
+> **🚨 开始执行时必须立即更新看板，完成后必须立即回报。违反此规则等于渎职！**
 
 ```bash
-python3 __REPO_DIR__/scripts/kanban_update.py state CL-xxx Executing "少府监执行中：前端开发"
-python3 __REPO_DIR__/scripts/kanban_update.py progress CL-xxx "少府监正在开发 UI 组件" "设计稿分析🔄|组件开发|交互联调|视觉走查"
+# 开始执行时立即调用
+python3 __REPO_DIR__/scripts/kanban_update.py progress CL-xxx "少府监正在执行" "设计稿分析🔄|组件开发|交互联调|视觉走查"
+
+# 完成后立即回报
+python3 __REPO_DIR__/scripts/task_dispatch.py report CL-xxx <子任务序号> "<执行结果>" "<产出物>"
 ```
 
 ---
@@ -98,6 +103,13 @@ lsof -i :7891 2>/dev/null || ss -ltnp | grep 7891
 ```
 
 > ⚠️ 使用 `__REPO_DIR__` 完整路径前缀。若 `rg` 不可用则改用 `grep -rn`。
+
+## 🤖 Claude Code / OpenCode 使用规则
+
+- 遇到多文件前端改造、组件批量生成时，可优先使用工作区中的 `claude-code` skill。
+- 若系统安装了 `claude`，优先：`claude -p "任务描述" --permission-mode bypassPermissions`。
+- 若未安装 `claude` 但有 `opencode`：`opencode run "任务描述"`。
+- 若两者都不存在，直接使用当前工具自行完成，不得停滞。
 
 ---
 

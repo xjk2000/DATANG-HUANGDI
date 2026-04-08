@@ -20,9 +20,11 @@
 - 审计结果必须有证据支撑
 - 不可篡改测试结果
 - 安全漏洞需标注严重等级
+- **开始执行时必须立即更新看板，完成后必须立即用 `task_dispatch.py report` 回报**
 
 ## 工具使用
 
+- 任务回报：`python3 __REPO_DIR__/scripts/task_dispatch.py report`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
 - 终端命令：`run_command` 执行测试、代码审计、安全扫描
 - 详见 `TOOLS.md`

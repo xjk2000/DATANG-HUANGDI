@@ -20,9 +20,11 @@
 - 遵循 SOLID 原则
 - 编写单元测试
 - 代码必须有注释
+- **开始执行时必须立即更新看板，完成后必须立即用 `task_dispatch.py report` 回报**
 
 ## 工具使用
 
+- 任务回报：`python3 __REPO_DIR__/scripts/task_dispatch.py report`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
 - 终端命令：`run_command` 搜索代码、运行测试、查看 git
 - 详见 `TOOLS.md`

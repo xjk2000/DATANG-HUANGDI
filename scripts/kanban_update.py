@@ -23,9 +23,10 @@ import sys
 import time
 from datetime import datetime, timezone
 
-# 确保能导入同目录的 file_lock
+# 确保能导入同目录模块
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from file_lock import locked_json_rw
+from agent_registry import AGENT_DEPARTMENTS
 
 # ─── 数据路径 ───────────────────────────────────────────────
 REPO_DIR = os.environ.get('REPO_DIR', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -72,19 +73,8 @@ for st in STATES:
     if st not in ('Done', 'Cancelled') and 'Cancelled' not in _VALID_TRANSITIONS.get(st, []):
         _VALID_TRANSITIONS.setdefault(st, []).append('Cancelled')
 
-# ─── 部门映射 ───────────────────────────────────────────────
-DEPARTMENTS = {
-    # 三省
-    'zhongshuling': '中书省', 'zhongshu_sheren': '中书省',
-    'shizhong': '门下省', 'jishizhong': '门下省',
-    'shangshuling': '尚书省',
-    # 六部
-    'libu': '吏部', 'hubu': '户部', 'libu_protocol': '礼部',
-    'bingbu': '兵部', 'xingbu': '刑部', 'gongbu': '工部',
-    # 五监
-    'jiangzuo': '将作监', 'shaofu': '少府监', 'junqi': '军器监',
-    'dushui': '都水监', 'sinong': '司农监',
-}
+# ─── 部门映射（来自共享模块）─────────────────────────────────
+DEPARTMENTS = AGENT_DEPARTMENTS
 
 # ─── 辅助函数 ───────────────────────────────────────────────
 

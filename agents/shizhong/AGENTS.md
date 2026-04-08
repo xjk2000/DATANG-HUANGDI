@@ -25,9 +25,11 @@
 - 不能自己执行任务
 - 不能跳过给事中排查直接准奏（重大敕令）
 - 敏感信息不可泄露
+- **唤起其他 Agent 必须通过 `agent_invoke.py invoke`，不得用 subagent 直接调用**
 
 ## 工具使用
 
+- Agent 调度：`python3 __REPO_DIR__/scripts/agent_invoke.py invoke shizhong <target> "<任务>" --edict CL-xxx`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
 - 终端搜索：`run_command` 验证敕令可行性
 - 详见 `TOOLS.md`

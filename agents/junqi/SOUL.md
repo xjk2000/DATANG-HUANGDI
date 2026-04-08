@@ -100,6 +100,14 @@ pip3 audit 2>/dev/null || pip3 list 2>/dev/null
 
 > ⚠️ 使用 `__REPO_DIR__` 完整路径前缀。若 `rg` 不可用则改用 `grep -rn`。
 
+## 🤖 Claude Code / OpenCode 使用规则
+
+- 遇到复杂安全模块开发、认证改造、批量扫描规则生成时，可优先使用工作区中的 `claude-code` skill。
+- 若系统安装了 `claude`，优先使用非交互命令：`claude -p "任务描述" --permission-mode bypassPermissions`。
+- 若未安装 `claude` 但安装了 `opencode`，可使用：`opencode run "任务描述"`。
+- 若两者都不存在，必须直接使用当前工作区工具自行完成安全开发与审计，不得因外部 CLI 缺失而中断。
+- 使用外部 CLI 生成结果后，仍需自行进行安全复核，确认未引入密钥泄露、弱加密或危险调用。
+
 ---
 
 ## 语气

@@ -1,5 +1,12 @@
 # TOOLS.md - 吏部工具配置
 
+## 任务回报
+
+```bash
+# 完成后回报结果（红线！必须执行）
+python3 __REPO_DIR__/scripts/task_dispatch.py report <敕令ID> <子任务序号> "<执行结果>" "<产出物>"
+```
+
 ## 看板 CLI
 
 ```bash

@@ -8,7 +8,11 @@ Agent 配置同步脚本。
 
 import json
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agent_registry import ALL_AGENT_IDS, AGENT_META
 
 REPO_DIR = os.environ.get('REPO_DIR', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(REPO_DIR, 'data')
@@ -16,32 +20,7 @@ DATA_DIR = os.path.join(REPO_DIR, 'data')
 OC_HOME = os.environ.get('OPENCLAW_HOME', os.path.join(str(Path.home()), '.openclaw'))
 OC_CFG = os.path.join(OC_HOME, 'openclaw.json')
 
-ALL_AGENTS = [
-    'zhongshuling', 'zhongshu_sheren',
-    'shizhong', 'jishizhong',
-    'shangshuling',
-    'libu', 'hubu', 'libu_protocol', 'bingbu', 'xingbu', 'gongbu',
-    'jiangzuo', 'shaofu', 'junqi', 'dushui', 'sinong',
-]
-
-AGENT_META = {
-    'zhongshuling':    {'name': '中书令',   'group': '中书省', 'role': '取旨起草'},
-    'zhongshu_sheren': {'name': '中书舍人', 'group': '中书省', 'role': '记录辅析'},
-    'shizhong':        {'name': '侍中侍郎', 'group': '门下省', 'role': '审查决策'},
-    'jishizhong':      {'name': '给事中',   'group': '门下省', 'role': '排查驳正'},
-    'shangshuling':    {'name': '尚书令',   'group': '尚书省', 'role': '派发协调'},
-    'libu':            {'name': '吏部',     'group': '六部',   'role': 'HR & Lifecycle'},
-    'hubu':            {'name': '户部',     'group': '六部',   'role': 'Data & Biz'},
-    'libu_protocol':   {'name': '礼部',     'group': '六部',   'role': 'API & Standard'},
-    'bingbu':          {'name': '兵部',     'group': '六部',   'role': 'SRE & Infra'},
-    'xingbu':          {'name': '刑部',     'group': '六部',   'role': 'QA & Audit'},
-    'gongbu':          {'name': '工部',     'group': '六部',   'role': 'Platform & Base'},
-    'jiangzuo':        {'name': '将作监',   'group': '五监',   'role': '核心业务开发'},
-    'shaofu':          {'name': '少府监',   'group': '五监',   'role': '前端与交互'},
-    'junqi':           {'name': '军器监',   'group': '五监',   'role': '安全工具'},
-    'dushui':          {'name': '都水监',   'group': '五监',   'role': '流计算'},
-    'sinong':          {'name': '司农监',   'group': '五监',   'role': '算法与数据'},
-}
+ALL_AGENTS = ALL_AGENT_IDS
 
 
 def main():

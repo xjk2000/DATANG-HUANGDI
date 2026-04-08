@@ -17,7 +17,7 @@ banner() {
   echo -e "${CYAN}╔══════════════════════════════════════════════╗${NC}"
   echo -e "${CYAN}║  ⚔️  帝王系统 · Claw DiWang                 ║${NC}"
   echo -e "${CYAN}║  中书取旨 · 门下封驳 · 尚书奉而行之           ║${NC}"
-  echo -e "${CYAN}║  三省六部五监 · 16 Agent 安装向导             ║${NC}"
+  echo -e "${CYAN}║  三省六部五监 · 16 Agent 安装向导              ║${NC}"
   echo -e "${CYAN}╚══════════════════════════════════════════════╝${NC}"
   echo ""
 }
@@ -153,6 +153,15 @@ AGENTS_EOF
       fi
     done
 
+    # 部署仓库级 Skills（模板变量替换）
+    if [ -d "$REPO_DIR/skills" ]; then
+      find "$REPO_DIR/skills" -mindepth 2 -maxdepth 2 -name "SKILL.md" | while read -r skill_file; do
+        skill_name=$(basename "$(dirname "$skill_file")")
+        mkdir -p "$ws/skills/$skill_name"
+        sed "s|__REPO_DIR__|$REPO_DIR|g" "$skill_file" > "$ws/skills/$skill_name/SKILL.md"
+      done
+    fi
+  
     log "Workspace: $ws"
   done
 }
@@ -167,18 +176,18 @@ import json, pathlib, sys
 cfg_path = pathlib.Path.home() / '.openclaw' / 'openclaw.json'
 cfg = json.loads(cfg_path.read_text())
 
-# ─── Agent 定义 + subagents 权限矩阵 ───
-# 权限原则：中书令→中书舍人+侍中, 侍中→给事中+尚书令, 尚书令→六部+五监, 六部/五监→尚书令
+# ─── Agent 定义 + subagents 权限矩阵（全 16 Agent）───
+# 核心流转：皇帝 → 中书令(接旨+审核) → 尚书令(派发) → 四核心部门(执行) → 尚书令(汇总) → 中书令(回奏)
+# 其余 agent 保留三省六部完整性，通过 agent_invoke.py 自建调度可扩展激活
 AGENTS = [
     # 三省
-    {"id": "zhongshuling",    "subagents": {"allowAgents": ["zhongshu_sheren", "shizhong"]}},
+    {"id": "zhongshuling",    "subagents": {"allowAgents": ["shangshuling"]}},
     {"id": "zhongshu_sheren", "subagents": {"allowAgents": ["zhongshuling"]}},
-    {"id": "shizhong",        "subagents": {"allowAgents": ["jishizhong", "shangshuling", "zhongshuling"]}},
+    {"id": "shizhong",        "subagents": {"allowAgents": ["shangshuling", "zhongshuling"]}},
     {"id": "jishizhong",      "subagents": {"allowAgents": ["shizhong"]}},
     {"id": "shangshuling",    "subagents": {"allowAgents": [
-        "zhongshuling", "shizhong",
-        "libu", "hubu", "libu_protocol", "bingbu", "xingbu", "gongbu",
-        "jiangzuo", "shaofu", "junqi", "dushui", "sinong"
+        "zhongshuling",
+        "jiangzuo", "shaofu", "xingbu", "hubu"
     ]}},
     # 六部
     {"id": "libu",            "subagents": {"allowAgents": ["shangshuling"]}},
@@ -668,27 +677,16 @@ echo -e "${GREEN}╔════════════════════
 echo -e "${GREEN}║  🎉  帝王系统安装完成！16 Agent 已就位！             ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo "三省："
-echo "  📜 中书令 (zhongshuling)     - 取旨起草"
-echo "  📝 中书舍人 (zhongshu_sheren) - 记录辅析"
-echo "  🔍 侍中侍郎 (shizhong)      - 审查决策"
-echo "  ⚖️  给事中 (jishizhong)      - 排查驳正"
-echo "  📮 尚书令 (shangshuling)     - 派发协调"
+echo "核心流转（6 Agent）："
+echo "  📜 中书令 (zhongshuling)  - 接旨 + 审核 + 回奏"
+echo "  📮 尚书令 (shangshuling)  - 任务调度 + 汇总"
+echo "  🏗️  将作监 (jiangzuo)     - 后端开发 + 基建"
+echo "  🎨 少府监 (shaofu)       - 前端与交互"
+echo "  ⚖️  刑部 (xingbu)         - 测试 + 审计 + 安全"
+echo "  💰 户部 (hubu)           - 数据 + 日志 + 运维"
 echo ""
-echo "六部："
-echo "  👥 吏部 (libu)          - HR & Lifecycle"
-echo "  💰 户部 (hubu)          - Data & Biz"
-echo "  📋 礼部 (libu_protocol) - API & Standard"
-echo "  ⚔️  兵部 (bingbu)        - SRE & Infra"
-echo "  🔒 刑部 (xingbu)        - QA & Audit"
-echo "  🔧 工部 (gongbu)        - Platform & Base"
-echo ""
-echo "五监："
-echo "  🏗️  将作监 (jiangzuo) - 核心业务开发"
-echo "  🎨 少府监 (shaofu)   - 前端与交互"
-echo "  🛡️  军器监 (junqi)    - 安全工具"
-echo "  🌊 都水监 (dushui)   - 流计算"
-echo "  🌾 司农监 (sinong)   - 算法与数据"
+echo "三省六部五监完整体系（16 Agent 全部注册）："
+echo "  通过 agent_invoke.py 可随时唤起任意 Agent"
 echo ""
 echo "下一步："
 echo "  1. 启动数据刷新:   bash scripts/run_loop.sh &"

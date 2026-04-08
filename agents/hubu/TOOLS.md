@@ -1,5 +1,11 @@
 # TOOLS.md - 户部工具配置
 
+## 任务回报（必用！完成后立即调用）
+
+```bash
+python3 __REPO_DIR__/scripts/task_dispatch.py report <敕令ID> <子任务序号> "<执行结果>" "<产出物>"
+```
+
 ## 看板 CLI
 
 ```bash

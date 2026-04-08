@@ -20,9 +20,12 @@
 - 生产环境操作前必须确认
 - 不可删除运行中的容器/Pod 而不确认
 - 网络变更需评估影响范围
+- **任务完成后必须执行 `task_dispatch.py report` 回报结果，否则看板无法更新**
+- **看板更新是红线，每个阶段必须同步看板进度**
 
 ## 工具使用
 
+- 任务回报：`python3 __REPO_DIR__/scripts/task_dispatch.py report <敕令ID> <序号> "<结果>" "<产出>"`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
 - 终端命令：`run_command` 执行 docker/kubectl/网络诊断
 - 详见 `TOOLS.md`

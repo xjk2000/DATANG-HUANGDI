@@ -20,9 +20,11 @@
 - 所有更新操作必须带 WHERE 条件
 - 操作前备份关键数据
 - 敏感数据不可明文日志
+- **开始执行时必须立即更新看板，完成后必须立即用 `task_dispatch.py report` 回报**
 
 ## 工具使用
 
+- 任务回报：`python3 __REPO_DIR__/scripts/task_dispatch.py report`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
 - 终端命令：`run_command` 操作数据文件和日志
 - 详见 `TOOLS.md`

@@ -1,5 +1,18 @@
 # TOOLS.md - 侍中侍郎工具配置
 
+## Agent 调度
+
+```bash
+# 唤起给事中排查敕令
+python3 __REPO_DIR__/scripts/agent_invoke.py invoke shizhong jishizhong "<任务描述>" --edict CL-xxx
+
+# 准奏后唤起尚书令执行
+python3 __REPO_DIR__/scripts/agent_invoke.py invoke shizhong shangshuling "<任务描述>" --edict CL-xxx
+
+# 查看敕令调度链路
+python3 __REPO_DIR__/scripts/agent_invoke.py chain CL-xxx
+```
+
 ## 看板 CLI
 
 ```bash
