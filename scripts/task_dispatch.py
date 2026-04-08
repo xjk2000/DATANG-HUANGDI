@@ -30,6 +30,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from file_lock import locked_json_rw
 from agent_registry import AGENT_DEPARTMENTS, AGENT_LABELS
+from agent_heartbeat import pulse as heartbeat_pulse
 
 REPO_DIR = os.environ.get('REPO_DIR', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(REPO_DIR, 'data')
@@ -141,6 +142,12 @@ def cmd_dispatch(args):
             sys.exit(1)
 
     audit_log(f"DISPATCH {subtask_id} | {agent_id} | {description}")
+    # 心跳：标记目标 agent 为 waiting
+    try:
+        heartbeat_pulse(agent_id, status='waiting', task=description,
+                        edict=task_id, phase='等待派令', tool='script')
+    except Exception:
+        pass
     print_ok(f"子任务已派发: {subtask_id} → {AGENT_DEPARTMENTS[agent_id]}({agent_id})")
     print_info(f"任务: {description}")
     print_info(f"验收: {acceptance}")
@@ -216,6 +223,15 @@ def cmd_report(args):
                 break
 
     audit_log(f"REPORT {subtask_id} | {status} | {result}")
+    # 心跳：标记回报 agent 为 done/blocked
+    report_agent = found.get('agent_id', '')
+    if report_agent:
+        try:
+            hb_status = 'done' if status == 'completed' else 'blocked'
+            heartbeat_pulse(report_agent, status=hb_status, task=result,
+                            edict=task_id, phase='已回报', tool='script')
+        except Exception:
+            pass
     print_ok(f"子任务回报: {subtask_id} | {status}")
 
     # 3. 检查是否全部完成

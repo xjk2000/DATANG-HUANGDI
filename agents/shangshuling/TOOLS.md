@@ -72,6 +72,19 @@ find __REPO_DIR__ -maxdepth 3 -type f | head -80
 | 都水监 | `dushui` | Kafka + Flink 流处理 |
 | 司农监 | `sinong` | 爬虫 + 模型训练 + RAG |
 
+## 心跳监控（发现卡死 Agent）
+
+```bash
+# 查看所有 Agent 实时状态（Claude Code CLI 和 OpenClaw 共享）
+python3 __REPO_DIR__/scripts/agent_heartbeat.py status
+
+# 检测卡死 Agent（10 分钟无心跳）
+python3 __REPO_DIR__/scripts/agent_heartbeat.py check --timeout 600
+
+# 查看单个 Agent 详情
+python3 __REPO_DIR__/scripts/agent_heartbeat.py status --agent jiangzuo
+```
+
 ## 数据文件
 
 - 任务数据：`__REPO_DIR__/data/tasks_source.json`

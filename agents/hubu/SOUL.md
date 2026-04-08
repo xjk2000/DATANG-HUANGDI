@@ -59,12 +59,18 @@
 > **🚨 开始执行时必须立即更新看板，完成后必须立即回报。违反此规则等于渎职！**
 
 ```bash
-# 开始执行时立即调用
+# 开始执行时立即调用（心跳 + 看板双写）
+python3 __REPO_DIR__/scripts/agent_heartbeat.py pulse hubu --status working --task "<任务简述>" --edict CL-xxx --phase "开始执行"
 python3 __REPO_DIR__/scripts/kanban_update.py progress CL-xxx "户部正在执行" "需求分析🔄|方案设计|实施执行|验证测试"
+
+# 执行过程中定期更新心跳（避免被判定为卡死）
+python3 __REPO_DIR__/scripts/agent_heartbeat.py pulse hubu --status working --task "<当前步骤>" --edict CL-xxx --phase "<阶段>"
 
 # 完成后立即回报
 python3 __REPO_DIR__/scripts/task_dispatch.py report CL-xxx <子任务序号> "<执行结果>" "<产出物>"
 ```
+
+> **💡 心跳文件 `data/agent_heartbeat.json` 是 Claude Code CLI 和 OpenClaw 共享的状态文件，任何一方都能看到你的执行状态。超过 10 分钟未更新心跳会被判定为卡死。**
 
 ---
 

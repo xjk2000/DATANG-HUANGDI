@@ -53,7 +53,8 @@
 > **🚨 开始执行时必须立即更新看板，完成后必须立即回报。违反此规则等于渎职！**
 
 ```bash
-# 开始执行时立即调用
+# 开始执行时立即调用（心跳 + 看板双写）
+python3 __REPO_DIR__/scripts/agent_heartbeat.py pulse shaofu --status working --task "<任务简述>" --edict CL-xxx --phase "开始执行"
 python3 __REPO_DIR__/scripts/kanban_update.py progress CL-xxx "少府监正在执行" "设计稿分析🔄|组件开发|交互联调|视觉走查"
 
 # 完成后立即回报

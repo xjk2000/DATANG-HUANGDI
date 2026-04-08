@@ -9,6 +9,7 @@
 import json
 import os
 import glob
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,34 +19,9 @@ DATA_DIR = os.path.join(REPO_DIR, 'data')
 # 支持通过环境变量配置 OpenClaw 路径，默认为 ~/.openclaw
 OC_HOME = os.environ.get('OPENCLAW_HOME', os.path.join(str(Path.home()), '.openclaw'))
 
-# 所有 Agent ID
-ALL_AGENTS = [
-    'zhongshuling', 'zhongshu_sheren',
-    'shizhong', 'jishizhong',
-    'shangshuling',
-    'libu', 'hubu', 'libu_protocol', 'bingbu', 'xingbu', 'gongbu',
-    'jiangzuo', 'shaofu', 'junqi', 'dushui', 'sinong',
-]
-
-AGENT_NAMES = {
-    'zhongshuling': '中书令', 'zhongshu_sheren': '中书舍人',
-    'shizhong': '侍中侍郎', 'jishizhong': '给事中',
-    'shangshuling': '尚书令',
-    'libu': '吏部', 'hubu': '户部', 'libu_protocol': '礼部',
-    'bingbu': '兵部', 'xingbu': '刑部', 'gongbu': '工部',
-    'jiangzuo': '将作监', 'shaofu': '少府监', 'junqi': '军器监',
-    'dushui': '都水监', 'sinong': '司农监',
-}
-
-AGENT_GROUPS = {
-    'zhongshuling': '中书省', 'zhongshu_sheren': '中书省',
-    'shizhong': '门下省', 'jishizhong': '门下省',
-    'shangshuling': '尚书省',
-    'libu': '六部', 'hubu': '六部', 'libu_protocol': '六部',
-    'bingbu': '六部', 'xingbu': '六部', 'gongbu': '六部',
-    'jiangzuo': '五监', 'shaofu': '五监', 'junqi': '五监',
-    'dushui': '五监', 'sinong': '五监',
-}
+# 从共享模块导入 Agent 元数据
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agent_registry import ALL_AGENT_IDS as ALL_AGENTS, AGENT_NAMES, AGENT_DEPARTMENTS as AGENT_GROUPS
 
 
 def now_iso():

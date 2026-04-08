@@ -33,6 +33,7 @@ LIVE_STATUS_FILE = os.path.join(DATA_DIR, 'live_status.json')
 AGENT_CONFIG_FILE = os.path.join(DATA_DIR, 'agent_config.json')
 SUMMARY_FILE = os.path.join(DATA_DIR, 'dashboard_summary.json')
 AUDIT_LOG_FILE = os.path.join(DATA_DIR, 'kanban_audit.log')
+HEARTBEAT_FILE = os.path.join(DATA_DIR, 'agent_heartbeat.json')
 
 PORT = int(os.environ.get('PORT', 7891))
 
@@ -240,9 +241,10 @@ class DiWangHandler(http.server.SimpleHTTPRequestHandler):
         error_response(self, f'敕令不存在: {task_id}', 404)
 
     def _api_agents_status(self):
-        """获取 Agent 实时状态"""
+        """获取 Agent 实时状态（融合 live_status + heartbeat）"""
         status = read_json(LIVE_STATUS_FILE, {})
-        # 合并元数据
+        heartbeat = read_json(HEARTBEAT_FILE, {})
+        # 合并元数据 + 心跳
         for agent_id, meta in AGENT_META.items():
             if agent_id in status:
                 status[agent_id].update(meta)
@@ -252,6 +254,18 @@ class DiWangHandler(http.server.SimpleHTTPRequestHandler):
                     'status': 'unknown',
                     'sessions': 0,
                     **meta,
+                }
+            # 融合心跳数据（心跳优先级更高，因为是实时上报的）
+            if agent_id in heartbeat:
+                hb = heartbeat[agent_id]
+                status[agent_id]['heartbeat'] = {
+                    'status': hb.get('status', ''),
+                    'task': hb.get('task', ''),
+                    'edict': hb.get('edict', ''),
+                    'phase': hb.get('phase', ''),
+                    'tool': hb.get('tool', ''),
+                    'updated_at': hb.get('updated_at', ''),
+                    'started_at': hb.get('started_at', ''),
                 }
         json_response(self, status)
 

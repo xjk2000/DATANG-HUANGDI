@@ -34,6 +34,7 @@
 - 任务状态：`python3 __REPO_DIR__/scripts/task_dispatch.py status`
 - 调度链路：`python3 __REPO_DIR__/scripts/agent_invoke.py chain`
 - 看板操作：`python3 __REPO_DIR__/scripts/kanban_update.py`
+- 心跳监控：`python3 __REPO_DIR__/scripts/agent_heartbeat.py status` / `check`
 - 终端搜索：`run_command` 分析项目结构辅助任务分配
 - 详见 `TOOLS.md`
 

@@ -37,6 +37,7 @@ from agent_registry import (
     VALID_AGENTS, AGENT_NAMES, AGENT_LABELS,
     INVOKE_PERMISSIONS, can_invoke, get_agent_name,
 )
+from agent_heartbeat import pulse as heartbeat_pulse
 
 # ── 路径常量 ──────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -172,6 +173,15 @@ def cmd_invoke(args):
         save(data)
 
     audit(f'{source} → {target} | {invoke_id} | {task_desc[:80]}')
+
+    # 心跳：标记双方状态
+    try:
+        heartbeat_pulse(source, status='working', task=f'调度 {get_agent_name(target)}',
+                        edict=edict_id, phase='调度中', tool='script')
+        heartbeat_pulse(target, status='working', task=task_desc[:80],
+                        edict=edict_id, phase='被唤起', tool='script')
+    except Exception:
+        pass
 
     # 输出调度信息
     print(f'╔══════════════════════════════════════════════╗')

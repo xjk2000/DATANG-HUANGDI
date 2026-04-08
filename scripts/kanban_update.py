@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from file_lock import locked_json_rw
 from agent_registry import AGENT_DEPARTMENTS
+from agent_heartbeat import pulse as heartbeat_pulse
 
 # ─── 数据路径 ───────────────────────────────────────────────
 REPO_DIR = os.environ.get('REPO_DIR', os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -140,6 +141,18 @@ def print_info(msg):
     print(f"\033[0;34mℹ️  {msg}\033[0m")
 
 
+def _auto_heartbeat(edict_id, phase='', task_desc='', status='working'):
+    """如果设置了 AGENT_ID 环境变量，自动触发心跳上报"""
+    agent_id = os.environ.get('AGENT_ID', '')
+    if not agent_id:
+        return
+    try:
+        heartbeat_pulse(agent_id, status=status, task=task_desc,
+                        edict=edict_id, phase=phase, tool='script')
+    except Exception:
+        pass  # 心跳失败不应阻断看板操作
+
+
 # ─── 命令实现 ───────────────────────────────────────────────
 
 def cmd_create(args):
@@ -234,6 +247,9 @@ def cmd_state(args):
 
     audit_log(f"STATE {task_id} | {current} → {next_state} | {remark}")
     print_ok(f"状态更新: {task_id} | {STATES[current]} → {STATES[next_state]}")
+    _auto_heartbeat(task_id, phase=STATES.get(next_state, next_state),
+                    task_desc=remark,
+                    status='done' if next_state == 'Done' else 'working')
 
 
 def cmd_flow(args):
@@ -307,6 +323,7 @@ def cmd_done(args):
 
     audit_log(f"DONE {task_id} | {summary}")
     print_ok(f"敕令完成: {task_id} | {summary}")
+    _auto_heartbeat(task_id, phase='已完成', task_desc=summary, status='done')
 
 
 def cmd_progress(args):
@@ -331,6 +348,7 @@ def cmd_progress(args):
 
     audit_log(f"PROGRESS {task_id} | {progress_text}")
     print_ok(f"进展更新: {task_id}")
+    _auto_heartbeat(task_id, phase=progress_text, task_desc=progress_text)
 
 
 def cmd_todo(args):
